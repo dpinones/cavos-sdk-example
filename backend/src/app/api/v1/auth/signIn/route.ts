@@ -88,21 +88,11 @@ export async function POST(request: NextRequest) {
       hasAccessToken: !!result.data.access_token,
     });
 
-    // return NextResponse.json({
-    //   success: true,
-    //   message: "Login successful",
-    //   data: {
-    //     user_id: result.data.user_id,
-    //     email: result.data.email,
-    //     organization: result.data.organization,
-    //     wallet: result.data.wallet,
-    //     authData: result.data.authData,
-    //   },
-    // });
-
     return NextResponse.json({
       success: true,
       message: "Login successful",
+      access_token: result.data.authData.accessToken,
+      wallet_address: result.data.wallet.address,
     });
   } catch (error: any) {
     console.error("💥 Signin error:", error);
