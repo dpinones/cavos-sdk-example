@@ -1,8 +1,8 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Inter, Space_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { satoshi, romagothicbold } from "../lib/fonts";
+import { romagothicbold } from "../lib/fonts";
 
 const geist = Inter({
   subsets: ["latin"],
