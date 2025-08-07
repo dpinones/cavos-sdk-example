@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       message: "User registered successfully",
       data: {
         email: result.data.email,
-        wallet: result.data.public_key,
+        wallet_address: result.data.wallet.address,
         created_at: result.data.created_at,
       },
     });

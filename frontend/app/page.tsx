@@ -2,14 +2,32 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import axios from "axios";
+
+interface RegistrationData {
+  email: string;
+  wallet_address: string;
+  created_at: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data: RegistrationData;
+}
 
 export default function Home() {
   const [isLoginForm, setIsLoginForm] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [registrationData, setRegistrationData] =
+    useState<RegistrationData | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
-    name: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,11 +35,90 @@ export default function Home() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear error/success messages when user starts typing
+    if (error) setError("");
+    if (success) setSuccess("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Generate random 15-character alphanumeric password
+  const generateRandomPassword = () => {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let password = "";
+    for (let i = 0; i < 15; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({
+      ...formData,
+      password: password,
+    });
+  };
+
+  // Generate random email address
+  const generateRandomEmail = () => {
+    const domains = [
+      "gmail.com",
+      "yahoo.com",
+      "hotmail.com",
+      "outlook.com",
+      "example.com",
+    ];
+    const randomString = Math.random().toString(36).substring(2, 10);
+    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+    const email = `${randomString}@${randomDomain}`;
+    setFormData({
+      ...formData,
+      email: email,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      if (isLoginForm) {
+        // Handle login logic here
+        console.log("Login form submitted:", formData);
+      } else {
+        // Handle register logic using axios
+        const response = await axios.post<ApiResponse>("/api/v1/auth/signUp", {
+          email: formData.email,
+          password: formData.password,
+          network: "sepolia", // Default network, you can make this configurable
+        });
+
+        if (response.data.success) {
+          setRegistrationData(response.data.data);
+          setShowSuccessModal(true);
+          // Clear form after successful registration
+          setFormData({ email: "", password: "" });
+        }
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.message || "Registration failed");
+      } else {
+        setError("An error occurred");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false);
+    setRegistrationData(null);
+    // Optionally switch to login form
+    setIsLoginForm(true);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You could add a toast notification here
   };
 
   return (
@@ -81,7 +178,7 @@ export default function Home() {
       </header>
 
       {/* Authentication Section */}
-      <section id="auth" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section id="auth" className="py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl">
             <div className="text-center mb-8">
@@ -118,42 +215,44 @@ export default function Home() {
                 className={`flex-1 py-3 px-4 font-heading font-medium transition-all duration-300 text-sm ${
                   !isLoginForm
                     ? "bg-[#EAE5DC] text-black shadow-lg"
-                    : "text-[#EAE5DC]/60 hover:text-[#EAE5DC] hover:bg-[#EAE5DC]/10"
+                    : "text-[#EAE5DC]/60 hover:text-[#EAE5DC] hover:bg-[#EAE5DC]/20"
                 }`}
               >
                 Sign Up
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {!isLoginForm && (
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-heading font-medium text-[#EAE5DC] mb-2"
-                  >
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
-              )}
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+            {success && (
+              <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                <p className="text-green-400 text-sm">{success}</p>
+              </div>
+            )}
 
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-heading font-medium text-[#EAE5DC] mb-2"
-                >
-                  Email Address
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-heading font-medium text-[#EAE5DC]"
+                  >
+                    Email Address
+                  </label>
+                  {!isLoginForm && (
+                    <button
+                      type="button"
+                      onClick={generateRandomEmail}
+                      className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+                    >
+                      Generate Random
+                    </button>
+                  )}
+                </div>
                 <input
                   type="email"
                   id="email"
@@ -163,54 +262,117 @@ export default function Home() {
                   className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
                   placeholder="Enter your email"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-heading font-medium text-[#EAE5DC] mb-2"
-                >
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-
-              {!isLoginForm && (
-                <div>
+                <div className="flex justify-between items-center mb-2">
                   <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-heading font-medium text-[#EAE5DC] mb-2"
+                    htmlFor="password"
+                    className="block text-sm font-heading font-medium text-[#EAE5DC]"
                   >
-                    Confirm Password
+                    Password
                   </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
-                    placeholder="Confirm your password"
-                    required
-                  />
+                  {!isLoginForm && (
+                    <button
+                      type="button"
+                      onClick={generateRandomPassword}
+                      className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+                    >
+                      Generate Random
+                    </button>
+                  )}
                 </div>
-              )}
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 pr-12 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
+                    placeholder="Enter your password"
+                    required
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#EAE5DC]/60 hover:text-[#EAE5DC] transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoginForm ? "Sign In" : "Create Account"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    {isLoginForm ? "Signing In..." : "Creating Account..."}
+                  </div>
+                ) : (
+                  <>{isLoginForm ? "Sign In" : "Create Account"}</>
+                )}
               </button>
             </form>
 
@@ -235,6 +397,85 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Success Modal */}
+      {showSuccessModal && registrationData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg
+                  className="w-8 h-8 text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-2">
+                User Registered Successfully!
+              </h3>
+              <p className="text-[#EAE5DC]/60 text-sm">
+                Your account has been created successfully.
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-black/30 rounded-lg p-4 border border-[#EAE5DC]/20">
+                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
+                  Registration Details:
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#EAE5DC]/60">Email:</span>
+                    <span className="text-[#EAE5DC] font-medium">
+                      {registrationData.email}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#EAE5DC]/60">Created At:</span>
+                    <span className="text-[#EAE5DC] font-medium">
+                      {new Date(registrationData.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="border-t border-[#EAE5DC]/20 pt-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[#EAE5DC]/60">Wallet Address:</span>
+                      <button
+                        onClick={() =>
+                          copyToClipboard(registrationData.wallet_address)
+                        }
+                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
+                      <p className="text-[#EAE5DC] font-mono text-xs break-all">
+                        {registrationData.wallet_address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={closeSuccessModal}
+              className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
+            >
+              Continue to Sign In
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="bg-black/40 border-t border-[#EAE5DC]/20 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
