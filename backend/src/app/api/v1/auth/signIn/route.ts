@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
       message: "Login successful",
       access_token: result.data.authData.accessToken,
       wallet_address: result.data.wallet.address,
+      email: result.data.email,
     });
   } catch (error: any) {
     console.error("💥 Signin error:", error);

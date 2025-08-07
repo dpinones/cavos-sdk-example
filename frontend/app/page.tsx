@@ -10,6 +10,14 @@ interface RegistrationData {
   created_at: string;
 }
 
+interface SignInResponse {
+  success: boolean;
+  message: string;
+  access_token: string;
+  wallet_address: string;
+  email?: string; // Added email to the interface
+}
+
 interface ApiResponse {
   success: boolean;
   message: string;
@@ -23,8 +31,10 @@ export default function Home() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
   const [registrationData, setRegistrationData] =
     useState<RegistrationData | null>(null);
+  const [signInData, setSignInData] = useState<SignInResponse | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -80,8 +90,22 @@ export default function Home() {
 
     try {
       if (isLoginForm) {
-        // Handle login logic here
-        console.log("Login form submitted:", formData);
+        // Handle sign in logic using axios
+        const response = await axios.post<SignInResponse>(
+          "/api/v1/auth/signIn",
+          {
+            email: formData.email,
+            password: formData.password,
+            network: "sepolia", // Default network, you can make this configurable
+          }
+        );
+
+        if (response.data.success) {
+          setSignInData(response.data);
+          setShowLoginSuccessModal(true);
+          // Clear form after successful login
+          setFormData({ email: "", password: "" });
+        }
       } else {
         // Handle register logic using axios
         const response = await axios.post<ApiResponse>("/api/v1/auth/signUp", {
@@ -100,7 +124,10 @@ export default function Home() {
     } catch (error) {
       console.error("Form submission error:", error);
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message || "Registration failed");
+        setError(
+          error.response?.data?.message ||
+            (isLoginForm ? "Login failed" : "Registration failed")
+        );
       } else {
         setError("An error occurred");
       }
@@ -114,6 +141,11 @@ export default function Home() {
     setRegistrationData(null);
     // Optionally switch to login form
     setIsLoginForm(true);
+  };
+
+  const closeLoginSuccessModal = () => {
+    setShowLoginSuccessModal(false);
+    setSignInData(null);
   };
 
   const copyToClipboard = (text: string) => {
@@ -397,6 +429,98 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Login Success Modal */}
+      {showLoginSuccessModal && signInData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg
+                  className="w-8 h-8 text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-2">
+                Login Successful!
+              </h3>
+              <p className="text-[#EAE5DC]/60 text-sm">
+                Welcome back! You have successfully signed in.
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-black/30 rounded-lg p-4 border border-[#EAE5DC]/20">
+                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
+                  Login Details:
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#EAE5DC]/60">Email:</span>
+                    <span className="text-[#EAE5DC] font-medium">
+                      {signInData.email || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#EAE5DC]/60">Network:</span>
+                    <span className="text-[#EAE5DC] font-medium">Sepolia</span>
+                  </div>
+                  <div className="border-t border-[#EAE5DC]/20 pt-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[#EAE5DC]/60">Wallet Address:</span>
+                      <button
+                        onClick={() =>
+                          copyToClipboard(signInData.wallet_address)
+                        }
+                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
+                      <p className="text-[#EAE5DC] font-mono text-xs break-all">
+                        {signInData.wallet_address}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="border-t border-[#EAE5DC]/20 pt-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[#EAE5DC]/60">Access Token:</span>
+                      <button
+                        onClick={() => copyToClipboard(signInData.access_token)}
+                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
+                      <p className="text-[#EAE5DC] font-mono text-xs break-all">
+                        {signInData.access_token.substring(0, 50)}...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={closeLoginSuccessModal}
+              className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {showSuccessModal && registrationData && (
