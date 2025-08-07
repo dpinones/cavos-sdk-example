@@ -29,8 +29,19 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Sign up error:", error);
 
+    // Handle axios errors properly
+    if (axios.isAxiosError(error)) {
+      return NextResponse.json(
+        {
+          message: error.response?.data?.message || "Backend service error",
+          status: error.response?.status || 500,
+        },
+        { status: error.response?.status || 500 }
+      );
+    }
+
     return NextResponse.json(
-      { message: error || "Internal Server Error" },
+      { message: "Internal Server Error" },
       { status: 500 }
     );
   }

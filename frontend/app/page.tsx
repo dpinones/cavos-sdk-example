@@ -32,6 +32,8 @@ export default function Home() {
   const [success, setSuccess] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState("");
   const [registrationData, setRegistrationData] =
     useState<RegistrationData | null>(null);
   const [signInData, setSignInData] = useState<SignInResponse | null>(null);
@@ -123,14 +125,16 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Form submission error:", error);
+      let errorMessage = "An error occurred";
+
       if (axios.isAxiosError(error)) {
-        setError(
+        errorMessage =
           error.response?.data?.message ||
-            (isLoginForm ? "Login failed" : "Registration failed")
-        );
-      } else {
-        setError("An error occurred");
+          (isLoginForm ? "Login failed" : "Registration failed");
       }
+
+      setErrorDetails(errorMessage);
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +150,11 @@ export default function Home() {
   const closeLoginSuccessModal = () => {
     setShowLoginSuccessModal(false);
     setSignInData(null);
+  };
+
+  const closeErrorModal = () => {
+    setShowErrorModal(false);
+    setErrorDetails("");
   };
 
   const copyToClipboard = (text: string) => {
@@ -429,6 +438,70 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-red-500/10 to-red-500/5 backdrop-blur-xl rounded-2xl p-8 border border-red-500/20 shadow-2xl max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg
+                  className="w-8 h-8 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-2">
+                {isLoginForm ? "Login Failed" : "Registration Failed"}
+              </h3>
+              <p className="text-[#EAE5DC]/60 text-sm">
+                {isLoginForm
+                  ? "Unable to sign in with the provided credentials."
+                  : "Unable to create your account at this time."}
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
+                  Error Details:
+                </h4>
+                <div className="bg-black/50 rounded-lg p-3 border border-red-500/20">
+                  <p className="text-red-400 font-mono text-sm break-all">
+                    {errorDetails}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={closeErrorModal}
+                className="flex-1 bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => {
+                  closeErrorModal();
+                  setIsLoginForm(!isLoginForm);
+                }}
+                className="flex-1 bg-transparent border border-[#EAE5DC]/30 text-[#EAE5DC] font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:bg-[#EAE5DC]/10 text-sm"
+              >
+                Switch to {isLoginForm ? "Sign Up" : "Sign In"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Login Success Modal */}
       {showLoginSuccessModal && signInData && (
