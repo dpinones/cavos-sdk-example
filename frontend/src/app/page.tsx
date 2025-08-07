@@ -37,171 +37,45 @@ export default function Home() {
         ></div>
       </div>
 
-      {/* Template Info Banner */}
-      <div className="fixed top-0 left-0 right-0 bg-[#EAE5DC] text-black z-50 border-b border-black/20">
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="flex items-center justify-center text-sm font-medium">
-            <span className="mr-2">🚀</span>
-            <span>
-              This is an AEGIS CAVOS Template - Use this to integrate secure
-              authentication into your app
-            </span>
-            <span className="ml-2">🚀</span>
-          </div>
-        </div>
-      </div>
-
       {/* Header */}
-      <header className="fixed top-12 w-full bg-black/80 backdrop-blur-xl z-40 border-b border-[#EAE5DC]/20">
+      <header className="fixed top-0 w-full bg-black/80 backdrop-blur-xl z-40 border-b border-[#EAE5DC]/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-center items-center h-16">
             <div className="flex items-center space-x-3">
               <Image
                 src="/CavosLogo.png"
                 alt="Cavos Logo"
-                width={40}
-                height={40}
-                className="w-10 h-10"
+                width={32}
+                height={32}
+                className="w-8 h-8"
               />
-              <h1 className="text-2xl font-heading font-bold text-[#EAE5DC]">
+              <h1 className="text-xl font-heading font-bold text-[#EAE5DC]">
                 AEGIS CAVOS
               </h1>
-            </div>
-            <div className="hidden md:block">
-              <div className="flex items-baseline space-x-6">
-                <a
-                  href="#home"
-                  className="text-[#EAE5DC] hover:text-[#EAE5DC]/80 transition-colors px-4 py-2 rounded-lg font-medium"
-                >
-                  Home
-                </a>
-                <a
-                  href="#auth"
-                  className="text-[#EAE5DC] hover:text-[#EAE5DC]/80 transition-colors px-4 py-2 rounded-lg font-medium"
-                >
-                  Login
-                </a>
-              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="pt-44 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
-            <div className="mb-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#EAE5DC]/10 border border-[#EAE5DC]/20 text-[#EAE5DC] font-medium text-sm mb-6">
-                <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-2 animate-pulse"></span>
-                AEGIS CAVOS Integration Template
-              </div>
-            </div>
-            <h1 className="text-5xl sm:text-7xl font-heading font-bold text-white mb-8 leading-tight">
-              <span className="text-[#EAE5DC]/20 block">INVISIBLE</span>
-              <span className="text-[#EAE5DC] relative">
-                CRYPTO INFRASTRUCTURE
-              </span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-[#EAE5DC]/80 mb-8 max-w-4xl mx-auto leading-relaxed">
-              This template demonstrates how to integrate AEGIS CAVOS secure
-              authentication and crypto infrastructure into your application.
-              Use this as a starting point for your own implementation.
-            </p>
-
-            {/* Template Features */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
-              <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 border border-[#EAE5DC]/20 rounded-xl p-6">
-                <h3 className="text-lg font-heading font-bold text-[#EAE5DC] mb-2">
-                  Ready to Use
-                </h3>
-                <p className="text-[#EAE5DC]/80 text-sm">
-                  Pre-configured authentication forms and styling
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 border border-[#EAE5DC]/20 rounded-xl p-6">
-                <h3 className="text-lg font-heading font-bold text-[#EAE5DC] mb-2">
-                  Easy Integration
-                </h3>
-                <p className="text-[#EAE5DC]/80 text-sm">
-                  Simple API calls to AEGIS CAVOS backend
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 border border-[#EAE5DC]/20 rounded-xl p-6">
-                <h3 className="text-lg font-heading font-bold text-[#EAE5DC] mb-2">
-                  Customizable
-                </h3>
-                <p className="text-[#EAE5DC]/80 text-sm">
-                  Modify colors, fonts, and layout to match your brand
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <button className="bg-[#EAE5DC] text-black font-heading font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:bg-[#EAE5DC]/90">
-                Get Started
-              </button>
-              <button className="border-2 border-[#EAE5DC] text-[#EAE5DC] hover:bg-[#EAE5DC]/10 font-heading font-bold py-4 px-8 rounded-lg transition-all duration-300">
-                View Documentation
-              </button>
+      <section id="home" className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="mb-8">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#EAE5DC]/10 border border-[#EAE5DC]/20 text-[#EAE5DC] font-medium text-sm">
+              <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-2 animate-pulse"></span>
+              Secure Authentication
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Integration Guide Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black/20">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-heading font-bold text-[#EAE5DC] mb-6">
-              How to Use This Template
-            </h2>
-            <p className="text-lg text-[#EAE5DC]/80 max-w-2xl mx-auto">
-              Follow these steps to integrate AEGIS CAVOS into your application
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 border border-[#EAE5DC]/20 rounded-2xl p-8">
-              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-4">
-                1. Setup Backend
-              </h3>
-              <div className="space-y-3 text-[#EAE5DC]/80 text-sm">
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-3"></span>
-                  Configure AEGIS CAVOS API endpoints
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-3"></span>
-                  Set up authentication routes
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-3"></span>
-                  Configure environment variables
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 border border-[#EAE5DC]/20 rounded-2xl p-8">
-              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-4">
-                2. Customize Frontend
-              </h3>
-              <div className="space-y-3 text-[#EAE5DC]/80 text-sm">
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-3"></span>
-                  Update branding and colors
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-3"></span>
-                  Modify form fields as needed
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-[#EAE5DC] rounded-full mr-3"></span>
-                  Connect to your API endpoints
-                </div>
-              </div>
-            </div>
-          </div>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 leading-tight">
+            <span className="text-[#EAE5DC]/20 block">INVISIBLE</span>
+            <span className="text-[#EAE5DC] relative">
+              CRYPTO INFRASTRUCTURE
+            </span>
+          </h1>
+          <p className="text-lg sm:text-xl text-[#EAE5DC]/80 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Experience seamless authentication with our advanced crypto
+            infrastructure platform.
+          </p>
         </div>
       </section>
 
@@ -210,41 +84,43 @@ export default function Home() {
         <div className="max-w-md mx-auto">
           <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl">
             <div className="text-center mb-8">
-              <Image
-                src="/CavosLogo.png"
-                alt="Cavos Logo"
-                width={60}
-                height={60}
-                className="w-15 h-15 mx-auto mb-4"
-              />
-              <h2 className="text-2xl font-heading font-bold text-[#EAE5DC]">
-                Template Authentication
+              <div className="w-16 h-16 bg-gradient-to-br from-[#EAE5DC]/20 to-[#EAE5DC]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <Image
+                  src="/CavosLogo.png"
+                  alt="Cavos Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8"
+                />
+              </div>
+              <h2 className="text-2xl font-heading font-bold text-[#EAE5DC] mb-2">
+                Welcome Back
               </h2>
-              <p className="text-[#EAE5DC]/60 mt-2">
-                Demo login/register functionality
+              <p className="text-[#EAE5DC]/60 text-sm">
+                Sign in to access your account
               </p>
             </div>
 
-            <div className="flex mb-8 rounded-xl overflow-hidden bg-black/20">
+            <div className="flex mb-8 rounded-xl overflow-hidden bg-black/20 border border-[#EAE5DC]/10">
               <button
                 onClick={() => setIsLoginForm(true)}
-                className={`flex-1 py-3 px-6 font-heading font-medium transition-all duration-300 ${
+                className={`flex-1 py-3 px-4 font-heading font-medium transition-all duration-300 text-sm ${
                   isLoginForm
-                    ? "bg-[#EAE5DC] text-black"
+                    ? "bg-[#EAE5DC] text-black shadow-lg"
                     : "text-[#EAE5DC]/60 hover:text-[#EAE5DC] hover:bg-[#EAE5DC]/10"
                 }`}
               >
-                Login
+                Sign In
               </button>
               <button
                 onClick={() => setIsLoginForm(false)}
-                className={`flex-1 py-3 px-6 font-heading font-medium transition-all duration-300 ${
+                className={`flex-1 py-3 px-4 font-heading font-medium transition-all duration-300 text-sm ${
                   !isLoginForm
-                    ? "bg-[#EAE5DC] text-black"
+                    ? "bg-[#EAE5DC] text-black shadow-lg"
                     : "text-[#EAE5DC]/60 hover:text-[#EAE5DC] hover:bg-[#EAE5DC]/10"
                 }`}
               >
-                Register
+                Sign Up
               </button>
             </div>
 
@@ -263,7 +139,7 @@ export default function Home() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans"
+                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
                     placeholder="Enter your full name"
                     required
                   />
@@ -275,7 +151,7 @@ export default function Home() {
                   htmlFor="email"
                   className="block text-sm font-heading font-medium text-[#EAE5DC] mb-2"
                 >
-                  Email
+                  Email Address
                 </label>
                 <input
                   type="email"
@@ -283,7 +159,7 @@ export default function Home() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans"
+                  className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
                   placeholder="Enter your email"
                   required
                 />
@@ -302,7 +178,7 @@ export default function Home() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans"
+                  className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
                   placeholder="Enter your password"
                   required
                 />
@@ -322,7 +198,7 @@ export default function Home() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans"
+                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
                     placeholder="Confirm your password"
                     required
                   />
@@ -331,14 +207,14 @@ export default function Home() {
 
               <button
                 type="submit"
-                className="w-full bg-[#EAE5DC] text-black font-heading font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:bg-[#EAE5DC]/90"
+                className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
               >
                 {isLoginForm ? "Sign In" : "Create Account"}
               </button>
             </form>
 
             {isLoginForm && (
-              <p className="text-center text-[#EAE5DC]/60 text-sm mt-6 font-sans">
+              <p className="text-center text-[#EAE5DC]/60 text-xs mt-6 font-sans">
                 Don&apos;t have an account?{" "}
                 <button
                   onClick={() => setIsLoginForm(false)}
@@ -349,11 +225,10 @@ export default function Home() {
               </p>
             )}
 
-            <div className="mt-6 p-4 bg-black/30 rounded-lg border border-[#EAE5DC]/20">
+            <div className="mt-6 p-4 bg-black/30 rounded-xl border border-[#EAE5DC]/20">
               <p className="text-[#EAE5DC]/60 text-xs text-center">
-                <strong>Template Note:</strong> This form demonstrates the UI.
-                Connect it to your AEGIS CAVOS backend API endpoints for full
-                functionality.
+                <strong>Secure:</strong> Your data is protected with
+                enterprise-grade encryption.
               </p>
             </div>
           </div>
@@ -361,24 +236,24 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black/40 border-t border-[#EAE5DC]/20 py-8 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-black/40 border-t border-[#EAE5DC]/20 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+            <div className="flex items-center space-x-3 mb-3 md:mb-0">
               <Image
                 src="/CavosLogo.png"
                 alt="Cavos Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8"
+                width={24}
+                height={24}
+                className="w-6 h-6"
               />
-              <span className="text-[#EAE5DC] font-heading font-bold">
+              <span className="text-[#EAE5DC] font-heading font-bold text-sm">
                 AEGIS CAVOS Template
               </span>
             </div>
             <div className="text-center md:text-right">
-              <p className="text-[#EAE5DC]/60 text-sm">
-                &copy; 2024 AEGIS CAVOS. Template for secure app integration.
+              <p className="text-[#EAE5DC]/60 text-xs">
+                &copy; 2024 AEGIS CAVOS. SDK integration template.
               </p>
             </div>
           </div>
