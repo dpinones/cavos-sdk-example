@@ -40,7 +40,7 @@ export default function Home() {
       {/* Header */}
       <header className="fixed top-0 w-full bg-black/80 backdrop-blur-xl z-40 border-b border-[#EAE5DC]/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-start items-center h-16">
+          <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Image
                 src="/CavosLogo.png"
@@ -53,21 +53,32 @@ export default function Home() {
                 AEGIS CAVOS
               </h1>
             </div>
+            <div className="flex items-center">
+              <a
+                href="https://docs.cavos.xyz/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-4 py-2 bg-[#EAE5DC]/10 border border-[#EAE5DC]/20 rounded-lg text-[#EAE5DC] hover:bg-[#EAE5DC]/20 transition-all duration-300 font-medium text-sm"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                <span>Documentation</span>
+              </a>
+            </div>
           </div>
         </div>
       </header>
-
-      {/* Hero Section */}
-      <section id="home" className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 leading-tight">
-            <span className="text-[#EAE5DC]/20 block">INVISIBLE</span>
-            <span className="text-[#EAE5DC] relative">
-              CRYPTO INFRASTRUCTURE
-            </span>
-          </h1>
-        </div>
-      </section>
 
       {/* Authentication Section */}
       <section id="auth" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -224,7 +235,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="bg-black/40 border-t border-[#EAE5DC]/20 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
