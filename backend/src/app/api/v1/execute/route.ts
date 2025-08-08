@@ -95,6 +95,17 @@ export async function POST(request: NextRequest) {
       calls,
       accessToken
     );
+    console.log("🔐 result", result);
+
+    if (result?.error) {
+      return NextResponse.json(
+        {
+          error: "Transaction failed",
+          details: "Unknown error occurred",
+        },
+        { status: 500 }
+      );
+    }
 
     console.log("✅ Transaction executed successfully:", {
       txHash: result.txHash,
