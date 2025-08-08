@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { walletAddress, calls, accessToken, network } = body;
 
-    console.log("�� Request data:", {
+    console.log("Request data:", {
       walletAddress,
       network,
       callsCount: calls?.length,

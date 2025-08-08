@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { romagothicbold } from "../lib/fonts";
+import { JotaiProvider } from "../lib/jotai-provider";
 
 const geist = Inter({
   subsets: ["latin"],
@@ -25,7 +26,7 @@ export default function RootLayout({
       <body
         className={`${geist.className} ${romagothicbold.variable} bg-[#000000] text-white antialiased`}
       >
-        {children}
+        <JotaiProvider>{children}</JotaiProvider>
       </body>
     </html>
   );
