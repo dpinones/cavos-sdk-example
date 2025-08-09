@@ -34,7 +34,10 @@ interface ApiResponse {
 interface ContractExecutionResult {
   success: boolean;
   message: string;
-  data?: unknown;
+  data?: {
+    txHash?: string;
+    [key: string]: unknown;
+  };
   transactionHash?: string;
   blockNumber?: number;
 }
@@ -132,10 +135,9 @@ export default function Home() {
           // Store user data in Jotai atoms
           signIn(response.data);
 
-          setSignInData(response.data);
-          setShowLoginSuccessModal(true);
           // Clear form after successful login
           setFormData({ email: "", password: "" });
+          setSuccess("Successfully signed in!");
         }
       } else {
         // Handle register logic using axios
@@ -258,17 +260,49 @@ export default function Home() {
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Display user info if authenticated */}
       {isAuthenticated && user && (
-        <div className="fixed top-20 right-4 bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-lg p-4 border border-[#EAE5DC]/20 shadow-lg z-30">
-          <div className="text-sm text-[#EAE5DC]/80 mb-2">Logged in as:</div>
-          <div className="text-[#EAE5DC] font-medium text-sm mb-2">
-            {user.email}
+        <div className="fixed top-20 right-4 bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-lg p-4 border border-[#EAE5DC]/20 shadow-lg z-30 max-w-xs">
+          <div className="text-sm text-[#EAE5DC]/80 mb-3 font-medium">
+            User Information
           </div>
-          <div className="text-xs text-[#EAE5DC]/60 mb-3">
-            Wallet: {user.wallet_address.substring(0, 10)}...
+
+          {/* Email */}
+          <div className="mb-3">
+            <div className="text-xs text-[#EAE5DC]/60 mb-1">Email:</div>
+            <div className="text-[#EAE5DC] font-medium text-sm break-all">
+              {user.email}
+            </div>
           </div>
+
+          {/* Wallet Address */}
+          <div className="mb-3">
+            <div className="text-xs text-[#EAE5DC]/60 mb-1">
+              Wallet Address:
+            </div>
+            <div className="text-[#EAE5DC] font-mono text-xs break-all bg-black/30 p-2 rounded border border-[#EAE5DC]/10">
+              {user.wallet_address}
+            </div>
+          </div>
+
+          {/* Network */}
+          <div className="mb-3">
+            <div className="text-xs text-[#EAE5DC]/60 mb-1">Network:</div>
+            <div className="text-[#EAE5DC] font-medium text-sm">
+              {user.network || "sepolia"}
+            </div>
+          </div>
+
+          {/* Access Token (truncated for security) */}
+          <div className="mb-4">
+            <div className="text-xs text-[#EAE5DC]/60 mb-1">Access Token:</div>
+            <div className="text-[#EAE5DC] font-mono text-xs bg-black/30 p-2 rounded border border-[#EAE5DC]/10 break-all">
+              {user.access_token.substring(0, 20)}...
+              {user.access_token.slice(-10)}
+            </div>
+          </div>
+
           <button
             onClick={handleSignOut}
-            className="w-full text-xs bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-1 rounded transition-colors hover:bg-red-500/30"
+            className="w-full text-xs bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded transition-colors hover:bg-red-500/30"
           >
             Sign Out
           </button>
@@ -346,33 +380,18 @@ export default function Home() {
                   />
                 </div>
                 <h2 className="text-2xl font-heading font-bold text-[#EAE5DC] mb-2">
-                  Contract Execution
+                  StarkNet Contract Execution
                 </h2>
-                <p className="text-[#EAE5DC]/60 text-sm">
-                  Execute smart contract operations
+                <p className="text-[#EAE5DC]/60 text-sm mb-4">
+                  Execute smart contract operations on StarkNet Sepolia testnet
                 </p>
-              </div>
-
-              {/* User Info */}
-              <div className="bg-black/30 rounded-xl p-4 border border-[#EAE5DC]/20 mb-6">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Email:</span>
-                    <span className="text-[#EAE5DC] font-medium">
-                      {user.email}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Wallet:</span>
-                    <span className="text-[#EAE5DC] font-medium font-mono text-xs">
-                      {user.wallet_address.substring(0, 10)}...
-                      {user.wallet_address.slice(-8)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Network:</span>
-                    <span className="text-[#EAE5DC] font-medium">Sepolia</span>
-                  </div>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                  <p className="text-blue-400 text-xs">
+                    <strong>About this demo:</strong> This will execute an
+                    &ldquo;approve&rdquo; function call on a StarkNet smart
+                    contract using your authenticated wallet. The transaction
+                    will be processed through the StarkNet Sepolia testnet.
+                  </p>
                 </div>
               </div>
 
@@ -387,6 +406,45 @@ export default function Home() {
                   <p className="text-green-400 text-sm">{success}</p>
                 </div>
               )}
+
+              {/* Contract Details */}
+              <div className="bg-black/30 rounded-xl p-4 border border-[#EAE5DC]/20 mb-6">
+                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
+                  Contract Call Details:
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#EAE5DC]/60 min-w-fit mr-2">
+                      Contract:
+                    </span>
+                    <span className="text-[#EAE5DC] font-mono text-xs break-all">
+                      0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#EAE5DC]/60">Function:</span>
+                    <span className="text-[#EAE5DC] font-medium">approve</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#EAE5DC]/60">Network:</span>
+                    <span className="text-[#EAE5DC] font-medium">
+                      StarkNet Sepolia
+                    </span>
+                  </div>
+                  <div className="border-t border-[#EAE5DC]/20 pt-3">
+                    <div className="text-[#EAE5DC]/60 mb-2">Call Data:</div>
+                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
+                      <div className="text-[#EAE5DC] font-mono text-xs space-y-1">
+                        <div>
+                          spender: 0x1234567890123456789012345678901234567890
+                        </div>
+                        <div>amount: 500000000000000000 (0.5 tokens)</div>
+                        <div>extra: 0</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Contract Execution Button */}
               <button
@@ -416,10 +474,13 @@ export default function Home() {
                         d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Executing Contract...
+                    Executing on StarkNet...
                   </div>
                 ) : (
-                  "Execute Contract"
+                  <>
+                    <span className="mr-2">🚀</span>
+                    Execute StarkNet Contract Call
+                  </>
                 )}
               </button>
 
@@ -427,15 +488,62 @@ export default function Home() {
               {contractResult && (
                 <div className="bg-black/30 rounded-xl p-4 border border-[#EAE5DC]/20">
                   <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                    Execution Result:
+                    StarkNet Transaction Result:
                   </h4>
                   <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
                     <pre className="text-[#EAE5DC] font-mono text-xs whitespace-pre-wrap overflow-auto">
                       {JSON.stringify(contractResult, null, 2)}
                     </pre>
                   </div>
+                  {contractResult.data?.txHash ? (
+                    <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded">
+                      <p className="text-green-400 text-xs mb-2">
+                        ✅ Transaction submitted to StarkNet! Hash:{" "}
+                        {contractResult.data.txHash}
+                      </p>
+                      <a
+                        href={`https://sepolia.voyager.online/tx/${contractResult.data.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center space-x-1 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs transition-colors hover:bg-blue-500/30"
+                      >
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
+                        </svg>
+                        <span>View on Voyager</span>
+                      </a>
+                    </div>
+                  ) : (
+                    contractResult.success && (
+                      <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded">
+                        <p className="text-yellow-400 text-xs">
+                          ⚠️ Transaction executed but no hash returned. Check
+                          the full response above.
+                        </p>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
+
+              {/* Info Footer */}
+              <div className="mt-6 p-4 bg-black/30 rounded-xl border border-[#EAE5DC]/20">
+                <p className="text-[#EAE5DC]/60 text-xs text-center">
+                  <strong>StarkNet Integration:</strong> This demo showcases
+                  seamless smart contract interaction on StarkNet using CAVOS
+                  infrastructure.
+                </p>
+              </div>
             </div>
           ) : (
             // Authentication Forms (existing login/register interface)
