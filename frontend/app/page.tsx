@@ -10,37 +10,12 @@ import {
   signOutAtom,
   isAuthenticatedAtom,
 } from "../lib/auth-atoms";
-
-interface RegistrationData {
-  email: string;
-  wallet_address: string;
-  created_at: string;
-}
-
-interface SignInResponse {
-  success: boolean;
-  message: string;
-  access_token: string;
-  wallet_address: string;
-  email?: string;
-}
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: RegistrationData;
-}
-
-interface ContractExecutionResult {
-  success: boolean;
-  message: string;
-  data?: {
-    txHash?: string;
-    [key: string]: unknown;
-  };
-  transactionHash?: string;
-  blockNumber?: number;
-}
+import type {
+  RegistrationData,
+  SignInResponse,
+  ApiResponse,
+  ContractExecutionResult,
+} from "../lib/types";
 
 export default function Home() {
   // Jotai atoms
