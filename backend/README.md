@@ -1,40 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# Cavos SDK Backend Integration Template
+
+This project serves as a template for integrating the Cavos SDK into your application. It provides a complete backend implementation with authentication and transaction execution capabilities using the Cavos service.
+
+## Overview
+
+The backend implements three main endpoints that demonstrate the core Cavos SDK functionality:
+
+- **Sign Up** - Create a new user account with wallet generation
+- **Sign In** - Authenticate existing users and retrieve access credentials
+- **Execute** - Execute blockchain transactions using Cavos infrastructure
+
+## Prerequisites
+
+Before running the application, you need to:
+
+1. **Register for Cavos**: Visit [https://aegis.cavos.xyz/login](https://aegis.cavos.xyz/login) to create your organization account
+2. **Get Organization Credentials**: After registration, you'll receive the necessary environment variables from your organization data
+
+## Environment Setup
+
+Create a `.env.local` file in the backend directory with the following variables (values will be provided from your Cavos organization data):
+
+```env
+# Add your Cavos organization credentials here
+# These values are obtained from https://aegis.cavos.xyz/login after registration
+CAVOS_API_KEY=your_api_key_here
+CAVOS_ORG_ID=your_org_id_here
+# Add other required environment variables as per your organization setup
+```
+
+## Installation & Running
+
+1. **Install dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+2. **Start the development server:**
+
+   ```bash
+   npm run dev
+   ```
+
+3. **The server will start on:** `http://localhost:3000`
+
+## API Endpoints
+
+### POST `/api/v1/auth/signUp`
+
+Creates a new user account and generates a wallet.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "your_password",
+  "network": "sepolia"
+}
+```
+
+### POST `/api/v1/auth/signIn`
+
+Authenticates a user and returns access credentials.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "your_password",
+  "network": "sepolia"
+}
+```
+
+**Response:**
+
+```json
+{
+  "walletAddress": "0x...",
+  "accessToken": "jwt_token_here"
+}
+```
+
+### POST `/api/v1/execute`
+
+Executes blockchain transactions using the authenticated user's wallet.
+
+**Request Body:**
+
+```json
+{
+  "walletAddress": "0x...",
+  "network": "sepolia",
+  "accessToken": "jwt_token_here",
+  "calls": [
+    {
+      "contractAddress": "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+      "entrypoint": "approve",
+      "calldata": [
+        "0x1234567890123456789012345678901234567890",
+        "500000000000000000",
+        "0"
+      ]
+    }
+  ]
+}
+```
+
+## Testing
+
+A Postman collection is included (`Auth Flow - SignUp → SignIn → Execute.postman_collection.json`) that demonstrates the complete authentication and execution flow:
+
+1. **Import the collection** into Postman
+2. **Run the requests in sequence:**
+   - First: Sign Up (creates a user with random email/password)
+   - Second: Sign In (authenticates and stores credentials)
+   - Third: Execute (performs a blockchain transaction)
+
+The collection automatically:
+
+- Generates random email and password for testing
+- Stores authentication tokens between requests
+- Sets up all required variables for the flow
+
+## Project Structure
+
+```
+backend/
+├── src/
+│   └── app/
+│       └── api/
+│           └── v1/
+│               ├── auth/
+│               │   ├── signIn/route.ts
+│               │   └── signUp/route.ts
+│               └── execute/route.ts
+├── Auth Flow - SignUp → SignIn → Execute.postman_collection.json
+├── package.json
+└── README.md
+```
 
 ## Getting Started
 
-First, run the development server:
+1. Register at [https://aegis.cavos.xyz/login](https://aegis.cavos.xyz/login)
+2. Set up your `.env.local` file with organization credentials
+3. Run `npm install && npm run dev`
+4. Test using the provided Postman collection
+5. Integrate the patterns into your own application
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+This template provides a solid foundation for building applications that leverage Cavos's blockchain infrastructure and wallet management capabilities.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Questions or Need Help?
 
-You can start editing the page by modifying `app/route.ts`. The page auto-updates as you edit the file.
+For comprehensive documentation, SDK references, and guides, visit the official Cavos documentation:
 
-## Learn More
+📚 **[Cavos Documentation](https://docs.cavos.xyz/)**
 
-To learn more about Next.js, take a look at the following resources:
+The documentation includes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Complete API references
+- Integration guides
+- SDK documentation
+- Best practices
+- Troubleshooting guides
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## API Routes
-
-This directory contains example API routes for the headless API app.
-
-For more details, see [route.js file convention](https://nextjs.org/docs/app/api-reference/file-conventions/route).
+If you have any questions about this template or Cavos integration, the documentation is your best resource for detailed information and support.
