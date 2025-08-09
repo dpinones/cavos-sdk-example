@@ -275,8 +275,14 @@ export default function Home() {
 
           {/* Wallet Address */}
           <div className="mb-3">
-            <div className="text-xs text-[#EAE5DC]/60 mb-1">
-              Wallet Address:
+            <div className="flex justify-between items-center mb-1">
+              <div className="text-xs text-[#EAE5DC]/60">Wallet Address:</div>
+              <button
+                onClick={() => copyToClipboard(user.wallet_address)}
+                className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+              >
+                Copy
+              </button>
             </div>
             <div className="text-[#EAE5DC] font-mono text-xs break-all bg-black/30 p-2 rounded border border-[#EAE5DC]/10">
               {user.wallet_address}
@@ -293,7 +299,15 @@ export default function Home() {
 
           {/* Access Token (truncated for security) */}
           <div className="mb-4">
-            <div className="text-xs text-[#EAE5DC]/60 mb-1">Access Token:</div>
+            <div className="flex justify-between items-center mb-1">
+              <div className="text-xs text-[#EAE5DC]/60">Access Token:</div>
+              <button
+                onClick={() => copyToClipboard(user.access_token)}
+                className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
+              >
+                Copy
+              </button>
+            </div>
             <div className="text-[#EAE5DC] font-mono text-xs bg-black/30 p-2 rounded border border-[#EAE5DC]/10 break-all">
               {user.access_token.substring(0, 20)}...
               {user.access_token.slice(-10)}
@@ -365,7 +379,9 @@ export default function Home() {
 
       {/* Main Content */}
       <section className="py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-2xl mx-auto">
+          {" "}
+          {/* Cambiado de max-w-md a max-w-2xl */}
           {isAuthenticated && user ? (
             // Contract Execution Interface
             <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl">
@@ -380,17 +396,17 @@ export default function Home() {
                   />
                 </div>
                 <h2 className="text-2xl font-heading font-bold text-[#EAE5DC] mb-2">
-                  StarkNet Contract Execution
+                  STARKNET Contract Execution
                 </h2>
                 <p className="text-[#EAE5DC]/60 text-sm mb-4">
-                  Execute smart contract operations on StarkNet Sepolia testnet
+                  Execute smart contract operations on STARKNET Sepolia testnet
                 </p>
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                   <p className="text-blue-400 text-xs">
                     <strong>About this demo:</strong> This will execute an
-                    &ldquo;approve&rdquo; function call on a StarkNet smart
+                    &ldquo;approve&rdquo; function call on a STARKNET smart
                     contract using your authenticated wallet. The transaction
-                    will be processed through the StarkNet Sepolia testnet.
+                    will be processed through the STARKNET Sepolia testnet.
                   </p>
                 </div>
               </div>
@@ -428,7 +444,7 @@ export default function Home() {
                   <div className="flex justify-between items-center">
                     <span className="text-[#EAE5DC]/60">Network:</span>
                     <span className="text-[#EAE5DC] font-medium">
-                      StarkNet Sepolia
+                      STARKNET Sepolia
                     </span>
                   </div>
                   <div className="border-t border-[#EAE5DC]/20 pt-3">
@@ -474,12 +490,12 @@ export default function Home() {
                         d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Executing on StarkNet...
+                    Executing on STARKNET...
                   </div>
                 ) : (
                   <>
                     <span className="mr-2">🚀</span>
-                    Execute StarkNet Contract Call
+                    Execute STARKNET Contract Call
                   </>
                 )}
               </button>
@@ -488,7 +504,7 @@ export default function Home() {
               {contractResult && (
                 <div className="bg-black/30 rounded-xl p-4 border border-[#EAE5DC]/20">
                   <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                    StarkNet Transaction Result:
+                    STARKNET Transaction Result:
                   </h4>
                   <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
                     <pre className="text-[#EAE5DC] font-mono text-xs whitespace-pre-wrap overflow-auto">
@@ -498,7 +514,7 @@ export default function Home() {
                   {contractResult.data?.txHash ? (
                     <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded">
                       <p className="text-green-400 text-xs mb-2">
-                        ✅ Transaction submitted to StarkNet! Hash:{" "}
+                        ✅ Transaction submitted to STARKNET! Hash:{" "}
                         {contractResult.data.txHash}
                       </p>
                       <a
@@ -539,8 +555,8 @@ export default function Home() {
               {/* Info Footer */}
               <div className="mt-6 p-4 bg-black/30 rounded-xl border border-[#EAE5DC]/20">
                 <p className="text-[#EAE5DC]/60 text-xs text-center">
-                  <strong>StarkNet Integration:</strong> This demo showcases
-                  seamless smart contract interaction on StarkNet using CAVOS
+                  <strong>STARKNET Integration:</strong> This demo showcases
+                  seamless smart contract interaction on STARKNET using CAVOS
                   infrastructure.
                 </p>
               </div>
