@@ -51,7 +51,6 @@ export default function Home() {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // Clear error/success messages when user starts typing
     if (error) setError("");
     if (success) setSuccess("");
   };
@@ -202,7 +201,6 @@ export default function Home() {
   const closeSuccessModal = () => {
     setShowSuccessModal(false);
     setRegistrationData(null);
-    // Optionally switch to login form
     setIsLoginForm(true);
   };
 
@@ -218,7 +216,6 @@ export default function Home() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // You could add a toast notification here
   };
 
   // Add a sign out handler
@@ -227,7 +224,6 @@ export default function Home() {
     setSignInData(null);
     setShowLoginSuccessModal(false);
     setContractResult(null);
-    // Optionally show a success message
     setSuccess("Successfully signed out");
   };
 
