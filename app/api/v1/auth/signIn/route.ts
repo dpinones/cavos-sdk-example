@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { CavosAuth } from "cavos-service-sdk";
 
 export async function POST(request: NextRequest) {
-  console.log("🚀 Signup request received");
+  console.log("🚀 Signin request received");
 
   try {
     const body = await request.json();
     const { email, password, network } = body;
 
-    console.log("📝 Request data:", {
+    console.log(" Request data:", {
       email,
       network,
       passwordLength: password?.length,
@@ -31,9 +31,7 @@ export async function POST(request: NextRequest) {
         network: !!network,
       });
       return NextResponse.json(
-        {
-          error: "Missing required fields: email, password, network",
-        },
+        { error: "Missing required fields: email, password, network" },
         { status: 400 }
       );
     }
@@ -65,15 +63,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate password strength
-    if (password.length < 8) {
-      console.log("❌ Password too short:", password.length);
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
-        { status: 400 }
-      );
-    }
-
     // Validate network
     const validNetworks = ["sepolia", "mainnet"];
     if (!validNetworks.includes(network)) {
@@ -92,32 +81,39 @@ export async function POST(request: NextRequest) {
     const cavosAuth = new CavosAuth(network, appId);
     console.log("🔐 CavosAuth initialized for network:", network);
 
-    console.log("📤 Calling CavosAuth.signUp...");
-    const result = await cavosAuth.signUp(email, password, orgSecret);
+    console.log("📤 Calling CavosAuth.signIn...");
+    const result = await cavosAuth.signIn(email, password, orgSecret);
+    console.log("✅ Signin successful:", {
+      walletAddress: result.data.wallet?.address,
+      hasAccessToken: !!result.data.access_token,
+    });
 
     return NextResponse.json({
       success: true,
-      message: "User registered successfully",
-      data: {
-        email: result.data.email,
-        wallet_address: result.data.wallet.address,
-        created_at: result.data.created_at,
-      },
+      message: "Login successful",
+      access_token: result.data.authData.accessToken,
+      wallet_address: result.data.wallet.address,
+      email: result.data.email,
     });
-  } catch (error: any) {
-    console.error("💥 Signup error:", error);
-    console.error("📋 Error details:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
+  } catch (error: unknown) {
+    console.error("💥 Signin error:", error);
+
+    let errorMessage = "Invalid credentials or unknown error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error("📋 Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+    }
 
     return NextResponse.json(
       {
-        error: "Registration failed",
-        details: error.message || "Unknown error occurred",
+        error: "Login failed",
+        details: errorMessage,
       },
-      { status: 500 }
+      { status: 401 }
     );
   }
 }

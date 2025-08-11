@@ -120,18 +120,23 @@ export async function POST(request: NextRequest) {
         accessToken: result.accessToken, // Automatically refreshed
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("💥 Execute transaction error:", error);
-    console.error("📋 Error details:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
+
+    let errorMessage = "Unknown error occurred";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error("📋 Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+    }
 
     return NextResponse.json(
       {
         error: "Transaction failed",
-        details: error.message || "Unknown error occurred",
+        details: errorMessage,
       },
       { status: 500 }
     );
