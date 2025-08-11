@@ -1,84 +1,131 @@
-# Cavos SDK Frontend Template
+# Cavos SDK Example
 
-A simple React/Next.js frontend for Cavos blockchain integration.
+A Next.js application demonstrating the integration with Cavos Service SDK for blockchain authentication and transaction execution.
 
-## What You Get
+## 🚀 Quick Start
 
-- **Sign Up UI** - User registration with wallet creation
-- **Sign In UI** - Authentication interface
-- **Execute UI** - Transaction execution interface
-- **State Management** - Session persistence with Jotai
+**First step: Read the [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) file to configure your environment variables before running the application.**
 
-## Quick Setup
+## 🏗️ Project Structure
 
-### 1. Start Backend First
-
-Make sure the backend is running (see backend README)
-
-### 2. Environment Setup
-
-Create `.env` file:
-
-```env
-BACKEND_URL=http://localhost:3000
-```
-
-### 3. Run the Frontend
-
-```bash
-npm install
-npm run dev
-```
-
-App starts at: `http://localhost:3000`
-
-## How to Test
-
-1. **Open the app** in your browser
-2. **Generate test data:**
-   - Click "Generate Random Email"
-   - Click "Generate Random Password"
-3. **Register:** Click "Register" button
-4. **Sign In:** Use same credentials to sign in
-5. **Execute:** Test a blockchain transaction
-
-## Features
-
-### Sign Up
-
-- Random email/password generators
-- Form validation
-- Success modal shows wallet address
-
-### Sign In
-
-- Persistent login state
-- Automatic token management
-- Session indicators
-
-### Execute
-
-- Contract execution interface
-- Transaction results
-- Loading states
-
-## Project Structure
+This is a consolidated Next.js application with integrated API routes:
 
 ```
-frontend/
+/
 ├── app/
-│   ├── page.tsx              # Main app page
-│   ├── layout.tsx            # Root layout
-│   └── api/v1/               # API proxies
-├── lib/
-│   ├── auth-atoms.ts         # State management
-│   ├── types.ts              # TypeScript types
-│   └── jotai-provider.tsx    # State provider
-└── package.json
+│   ├── api/v1/                    # API endpoints
+│   │   ├── auth/
+│   │   │   ├── signIn/route.ts    # User authentication
+│   │   │   └── signUp/route.ts    # User registration
+│   │   └── execute/route.ts       # Transaction execution
+│   ├── page.tsx                   # Main application page
+│   └── layout.tsx                 # Application layout
+├── lib/                           # Utility functions and types
+├── public/                        # Static assets
+└── .env.local                     # Environment variables
 ```
 
-## Need Help?
+## 📡 API Endpoints
 
-📚 **[Cavos Documentation](https://docs.cavos.xyz/)**
+### Authentication
 
-Complete guides, API references, and troubleshooting.
+#### POST `/api/v1/auth/signUp`
+
+Register a new user account.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123",
+  "network": "sepolia"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "email": "user@example.com",
+    "wallet_address": "0x...",
+    "created_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+#### POST `/api/v1/auth/signIn`
+
+Authenticate an existing user.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123",
+  "network": "sepolia"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "access_token": "eyJ...",
+  "wallet_address": "0x...",
+  "email": "user@example.com"
+}
+```
+
+### Transaction Execution
+
+#### POST `/api/v1/execute`
+
+Execute smart contract calls through Cavos.
+
+**Request Body:**
+
+```json
+{
+  "walletAddress": "0x...",
+  "network": "sepolia",
+  "accessToken": "eyJ...",
+  "calls": [
+    {
+      "contractAddress": "0x...",
+      "entrypoint": "transfer",
+      "calldata": ["0x...", "1000000"]
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Transaction executed successfully",
+  "data": {
+    "txHash": "0x...",
+    "accessToken": "eyJ..." // Refreshed token
+  }
+}
+```
+
+### Network Support
+
+- **Sepolia**: Ethereum testnet (recommended for development)
+- **Mainnet**: Ethereum mainnet (for production)
+
+## 🆘 Support
+
+For issues related to:
+
+- **Cavos SDK**: Check the [Cavos documentation](https://docs.cavos.com)

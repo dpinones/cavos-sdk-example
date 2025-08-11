@@ -101,7 +101,7 @@ export default function Home() {
           {
             email: formData.email,
             password: formData.password,
-            network: "sepolia", // Default network, you can make this configurable
+            network: "sepolia",
           }
         );
 
