@@ -9,14 +9,8 @@ export interface UserData {
   network?: string;
 }
 
-// Define the sign-in response interface
-export interface SignInResponse {
-  success: boolean;
-  message: string;
-  access_token: string;
-  wallet_address: string;
-  email?: string; // Make email optional to match the interface in page.tsx
-}
+// Import the SignInResponse interface from types.ts
+import type { SignInResponse } from "./types";
 
 // Create atoms for user authentication
 // Using atomWithStorage to persist the data in localStorage
