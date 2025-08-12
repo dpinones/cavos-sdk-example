@@ -1,1016 +1,139 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import axios from "axios";
-import { useAtom } from "jotai";
-import {
-  userAtom,
-  signInAtom,
-  signOutAtom,
-  isAuthenticatedAtom,
-} from "../lib/auth-atoms";
-import type {
-  RegistrationData,
-  SignInResponse,
-  ApiResponse,
-  ContractExecutionResult,
-} from "../lib/types";
+import LoginForm from "../components/LoginForm";
+import { userAtom, isAuthenticatedAtom, signInAtom, signOutAtom } from "../lib/auth-atoms";
+import type { ContractExecutionResult, SignInResponse } from "../lib/types";
 
 export default function Home() {
-  // Jotai atoms
-  const [user] = useAtom(userAtom);
-  const [isAuthenticated] = useAtom(isAuthenticatedAtom);
-  const [, signIn] = useAtom(signInAtom);
-  const [, signOut] = useAtom(signOutAtom);
+  const user = useAtomValue(userAtom);
+  const isAuthenticated = useAtomValue(isAuthenticatedAtom);
+  const signIn = useSetAtom(signInAtom);
+  const signOut = useSetAtom(signOutAtom);
 
-  const [isLoginForm, setIsLoginForm] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorDetails, setErrorDetails] = useState("");
-  const [registrationData, setRegistrationData] =
-    useState<RegistrationData | null>(null);
-  const [signInData, setSignInData] = useState<SignInResponse | null>(null);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  // Contract execution state
   const [isExecuting, setIsExecuting] = useState(false);
+  const [message, setMessage] = useState("");
   const [contractResult, setContractResult] =
     useState<ContractExecutionResult | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    if (error) setError("");
-    if (success) setSuccess("");
-  };
-
-  // Generate random 15-character alphanumeric password
-  const generateRandomPassword = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let password = "";
-    for (let i = 0; i < 15; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setFormData({
-      ...formData,
-      password: password,
-    });
-  };
-
-  // Generate random email address
-  const generateRandomEmail = () => {
-    const domains = [
-      "gmail.com",
-      "yahoo.com",
-      "hotmail.com",
-      "outlook.com",
-      "example.com",
-    ];
-    const randomString = Math.random().toString(36).substring(2, 10);
-    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-    const email = `${randomString}@${randomDomain}`;
-    setFormData({
-      ...formData,
-      email: email,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      if (isLoginForm) {
-        // Handle sign in logic using axios
-        const response = await axios.post<SignInResponse>(
-          "/api/v1/auth/signIn",
-          {
-            email: formData.email,
-            password: formData.password,
-            network: "sepolia",
-          }
-        );
-
-        if (response.data.success) {
-          // Store user data in Jotai atoms
-          signIn(response.data);
-
-          // Clear form after successful login
-          setFormData({ email: "", password: "" });
-          setSuccess("Successfully signed in!");
-        }
-      } else {
-        // Handle register logic using axios
-        const response = await axios.post<ApiResponse>("/api/v1/auth/signUp", {
-          email: formData.email,
-          password: formData.password,
-          network: "sepolia", // Default network, you can make this configurable
-        });
-
-        if (response.data.success) {
-          setRegistrationData(response.data.data);
-          setShowSuccessModal(true);
-          // Clear form after successful registration
-          setFormData({ email: "", password: "" });
-        }
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      let errorMessage = "An error occurred";
-
-      if (axios.isAxiosError(error)) {
-        errorMessage =
-          error.response?.data?.message ||
-          (isLoginForm ? "Login failed" : "Registration failed");
-      }
-
-      setErrorDetails(errorMessage);
-      setShowErrorModal(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle contract execution
   const handleExecuteContract = async () => {
     if (!user?.access_token) return;
 
     setIsExecuting(true);
-    setError("");
-    setSuccess("");
+    setMessage("");
 
     try {
-      const response = await axios.post(
-        "/api/v1/execute",
-        {
-          walletAddress: user.wallet_address,
-          network: user.network || "sepolia",
-          accessToken: user.access_token,
-          calls: [
-            {
-              contractAddress:
-                "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-              entrypoint: "approve",
-              calldata: [
-                "0x1234567890123456789012345678901234567890",
-                "500000000000000000",
-                "0",
-              ],
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user.access_token}`,
-            "Content-Type": "application/json",
+      const response = await axios.post("/api/v1/execute", {
+        walletAddress: user.wallet_address,
+        network: user.network,
+        accessToken: user.access_token,
+        calls: [
+          {
+            contractAddress:
+              "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+            entrypoint: "approve",
+            calldata: [
+              "0x1234567890123456789012345678901234567890",
+              "500000000000000000",
+              "0",
+            ],
           },
-        }
-      );
+        ],
+      });
 
       setContractResult(response.data);
-      setSuccess("Contract executed successfully!");
+      setMessage("Contract executed successfully!");
     } catch (error) {
-      console.error("Contract execution error:", error);
       let errorMessage = "Contract execution failed";
-
       if (axios.isAxiosError(error)) {
         errorMessage =
           error.response?.data?.message || "Contract execution failed";
       }
-
-      setError(errorMessage);
+      setMessage(errorMessage);
     } finally {
       setIsExecuting(false);
     }
   };
 
-  const closeSuccessModal = () => {
-    setShowSuccessModal(false);
-    setRegistrationData(null);
-    setIsLoginForm(true);
+  const handleSignIn = (signInResponse: SignInResponse) => {
+    signIn(signInResponse);
   };
 
-  const closeLoginSuccessModal = () => {
-    setShowLoginSuccessModal(false);
-    setSignInData(null);
-  };
-
-  const closeErrorModal = () => {
-    setShowErrorModal(false);
-    setErrorDetails("");
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
-  // Add a sign out handler
   const handleSignOut = () => {
     signOut();
-    setSignInData(null);
-    setShowLoginSuccessModal(false);
     setContractResult(null);
-    setSuccess("Successfully signed out");
+    setMessage("");
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Display user info if authenticated */}
-      {isAuthenticated && user && (
-        <div className="fixed top-20 right-4 bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-lg p-4 border border-[#EAE5DC]/20 shadow-lg z-30 max-w-xs">
-          <div className="text-sm text-[#EAE5DC]/80 mb-3 font-medium">
-            User Information
-          </div>
-
-          {/* Email */}
-          <div className="mb-3">
-            <div className="text-xs text-[#EAE5DC]/60 mb-1">Email:</div>
-            <div className="text-[#EAE5DC] font-medium text-sm break-all">
-              {user.email}
-            </div>
-          </div>
-
-          {/* Wallet Address */}
-          <div className="mb-3">
-            <div className="flex justify-between items-center mb-1">
-              <div className="text-xs text-[#EAE5DC]/60">Wallet Address:</div>
-              <button
-                onClick={() => copyToClipboard(user.wallet_address)}
-                className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-            <div className="text-[#EAE5DC] font-mono text-xs break-all bg-black/30 p-2 rounded border border-[#EAE5DC]/10">
-              {user.wallet_address}
-            </div>
-          </div>
-
-          {/* Network */}
-          <div className="mb-3">
-            <div className="text-xs text-[#EAE5DC]/60 mb-1">Network:</div>
-            <div className="text-[#EAE5DC] font-medium text-sm">
-              {user.network || "sepolia"}
-            </div>
-          </div>
-
-          {/* Access Token (truncated for security) */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <div className="text-xs text-[#EAE5DC]/60">Access Token:</div>
-              <button
-                onClick={() => copyToClipboard(user.access_token)}
-                className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-            <div className="text-[#EAE5DC] font-mono text-xs bg-black/30 p-2 rounded border border-[#EAE5DC]/10 break-all">
-              {user.access_token.substring(0, 20)}...
-              {user.access_token.slice(-10)}
-            </div>
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            className="w-full text-xs bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded transition-colors hover:bg-red-500/30"
-          >
-            Sign Out
-          </button>
-        </div>
-      )}
-
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(234, 229, 220, 0.3) 1px, transparent 0)`,
-            backgroundSize: "50px 50px",
-          }}
-        ></div>
-      </div>
-
-      {/* Header */}
-      <header className="fixed top-0 w-full bg-black/80 backdrop-blur-xl z-40 border-b border-[#EAE5DC]/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <Image
-                src="/CavosLogo.png"
-                alt="Cavos Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8"
-              />
-              <h1 className="text-xl font-heading font-bold text-[#EAE5DC]">
-                AEGIS CAVOS
-              </h1>
-            </div>
-            <div className="flex items-center">
-              <a
-                href="https://docs.cavos.xyz/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-4 py-2 bg-[#EAE5DC]/10 border border-[#EAE5DC]/20 rounded-lg text-[#EAE5DC] hover:bg-[#EAE5DC]/20 transition-all duration-300 font-medium text-sm"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {isAuthenticated && user ? (
+          // Dashboard/Contract Execution
+          <div className="space-y-6">
+            {/* User Info */}
+            <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-lg font-semibold">Dashboard</h2>
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm text-red-600 hover:text-red-800"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-                <span>Documentation</span>
-              </a>
+                  Sign Out
+                </button>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-gray-600">Network:</span> {user.network}
+                </div>
+                <div>
+                  <span className="text-gray-600">Wallet:</span>{" "}
+                  <span className="font-mono text-xs break-all">
+                    {user.wallet_address}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          {" "}
-          {/* Cambiado de max-w-md a max-w-2xl */}
-          {isAuthenticated && user ? (
-            // Contract Execution Interface
-            <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#EAE5DC]/20 to-[#EAE5DC]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <Image
-                    src="/CavosLogo.png"
-                    alt="Cavos Logo"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8"
-                  />
-                </div>
-                <h2 className="text-2xl font-heading font-bold text-[#EAE5DC] mb-2">
-                  STARKNET Contract Execution
-                </h2>
-                <p className="text-[#EAE5DC]/60 text-sm mb-4">
-                  Execute smart contract operations on STARKNET Sepolia testnet
-                </p>
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                  <p className="text-blue-400 text-xs">
-                    <strong>About this demo:</strong> This will execute an
-                    &ldquo;approve&rdquo; function call on a STARKNET smart
-                    contract using your authenticated wallet. The transaction
-                    will be processed through the STARKNET Sepolia testnet.
-                  </p>
-                </div>
-              </div>
-
-              {/* Error/Success Messages */}
-              {error && (
-                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-              {success && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
-                  <p className="text-green-400 text-sm">{success}</p>
+            {/* Contract Execution */}
+            <div className="bg-white rounded-lg shadow-sm border p-4">
+              <h3 className="text-lg font-semibold mb-4">Execute Contract</h3>
+              
+              {message && (
+                <div className={`mb-4 p-3 rounded text-sm ${
+                  message.includes("success") 
+                    ? "bg-green-50 text-green-700 border border-green-200" 
+                    : "bg-red-50 text-red-700 border border-red-200"
+                }`}>
+                  {message}
                 </div>
               )}
 
-              {/* Contract Details */}
-              <div className="bg-black/30 rounded-xl p-4 border border-[#EAE5DC]/20 mb-6">
-                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                  Contract Call Details:
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[#EAE5DC]/60 min-w-fit mr-2">
-                      Contract:
-                    </span>
-                    <span className="text-[#EAE5DC] font-mono text-xs break-all">
-                      0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Function:</span>
-                    <span className="text-[#EAE5DC] font-medium">approve</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Network:</span>
-                    <span className="text-[#EAE5DC] font-medium">
-                      STARKNET Sepolia
-                    </span>
-                  </div>
-                  <div className="border-t border-[#EAE5DC]/20 pt-3">
-                    <div className="text-[#EAE5DC]/60 mb-2">Call Data:</div>
-                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
-                      <div className="text-[#EAE5DC] font-mono text-xs space-y-1">
-                        <div>
-                          spender: 0x1234567890123456789012345678901234567890
-                        </div>
-                        <div>amount: 500000000000000000 (0.5 tokens)</div>
-                        <div>extra: 0</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contract Execution Button */}
               <button
                 onClick={handleExecuteContract}
                 disabled={isExecuting}
-                className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isExecuting ? (
-                  <div className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Executing on STARKNET...
-                  </div>
-                ) : (
-                  <>
-                    <span className="mr-2">🚀</span>
-                    Execute STARKNET Contract Call
-                  </>
-                )}
+                {isExecuting ? "Executing..." : "Execute Contract"}
               </button>
 
-              {/* Contract Result */}
               {contractResult && (
-                <div className="bg-black/30 rounded-xl p-4 border border-[#EAE5DC]/20">
-                  <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                    STARKNET Transaction Result:
-                  </h4>
-                  <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
-                    <pre className="text-[#EAE5DC] font-mono text-xs whitespace-pre-wrap overflow-auto">
-                      {JSON.stringify(contractResult, null, 2)}
-                    </pre>
-                  </div>
-                  {contractResult.data?.txHash ? (
-                    <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded">
-                      <p className="text-green-400 text-xs mb-2">
-                        ✅ Transaction submitted to STARKNET! Hash:{" "}
-                        {contractResult.data.txHash}
-                      </p>
-                      <a
-                        href={`https://sepolia.voyager.online/tx/${contractResult.data.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs transition-colors hover:bg-blue-500/30"
-                      >
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
-                        <span>View on Voyager</span>
-                      </a>
-                    </div>
-                  ) : (
-                    contractResult.success && (
-                      <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded">
-                        <p className="text-yellow-400 text-xs">
-                          ⚠️ Transaction executed but no hash returned. Check
-                          the full response above.
-                        </p>
-                      </div>
-                    )
-                  )}
+                <div className="mt-4 p-3 bg-gray-50 rounded border">
+                  <h4 className="text-sm font-medium mb-2">Result:</h4>
+                  <pre className="text-xs overflow-auto whitespace-pre-wrap">
+                    {JSON.stringify(contractResult, null, 2)}
+                  </pre>
                 </div>
               )}
-
-              {/* Info Footer */}
-              <div className="mt-6 p-4 bg-black/30 rounded-xl border border-[#EAE5DC]/20">
-                <p className="text-[#EAE5DC]/60 text-xs text-center">
-                  <strong>STARKNET Integration:</strong> This demo showcases
-                  seamless smart contract interaction on STARKNET using CAVOS
-                  infrastructure.
-                </p>
-              </div>
-            </div>
-          ) : (
-            // Authentication Forms (existing login/register interface)
-            <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#EAE5DC]/20 to-[#EAE5DC]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <Image
-                    src="/CavosLogo.png"
-                    alt="Cavos Logo"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8"
-                  />
-                </div>
-                <h2 className="text-2xl font-heading font-bold text-[#EAE5DC] mb-2">
-                  Welcome Back
-                </h2>
-                <p className="text-[#EAE5DC]/60 text-sm">
-                  Sign in to access your account
-                </p>
-              </div>
-
-              <div className="flex mb-8 rounded-xl overflow-hidden bg-black/20 border border-[#EAE5DC]/10">
-                <button
-                  onClick={() => setIsLoginForm(true)}
-                  className={`flex-1 py-3 px-4 font-heading font-medium transition-all duration-300 text-sm ${
-                    isLoginForm
-                      ? "bg-[#EAE5DC] text-black shadow-lg"
-                      : "text-[#EAE5DC]/60 hover:text-[#EAE5DC] hover:bg-[#EAE5DC]/10"
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setIsLoginForm(false)}
-                  className={`flex-1 py-3 px-4 font-heading font-medium transition-all duration-300 text-sm ${
-                    !isLoginForm
-                      ? "bg-[#EAE5DC] text-black shadow-lg"
-                      : "text-[#EAE5DC]/60 hover:text-[#EAE5DC] hover:bg-[#EAE5DC]/20"
-                  }`}
-                >
-                  Sign Up
-                </button>
-              </div>
-
-              {/* Error/Success Messages */}
-              {error && (
-                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-              {success && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
-                  <p className="text-green-400 text-sm">{success}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-heading font-medium text-[#EAE5DC]"
-                    >
-                      Email Address
-                    </label>
-                    {!isLoginForm && (
-                      <button
-                        type="button"
-                        onClick={generateRandomEmail}
-                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-                      >
-                        Generate Random
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
-                    placeholder="Enter your email"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label
-                      htmlFor="password"
-                      className="block text-sm font-heading font-medium text-[#EAE5DC]"
-                    >
-                      Password
-                    </label>
-                    {!isLoginForm && (
-                      <button
-                        type="button"
-                        onClick={generateRandomPassword}
-                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-                      >
-                        Generate Random
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 pr-12 bg-black/50 border border-[#EAE5DC]/30 rounded-xl text-[#EAE5DC] placeholder-[#EAE5DC]/40 focus:outline-none focus:ring-2 focus:ring-[#EAE5DC] focus:border-transparent transition-all duration-300 font-sans text-sm"
-                      placeholder="Enter your password"
-                      required
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#EAE5DC]/60 hover:text-[#EAE5DC] transition-colors disabled:opacity-50"
-                      disabled={isLoading}
-                    >
-                      {showPassword ? (
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {isLoginForm ? "Signing In..." : "Creating Account..."}
-                    </div>
-                  ) : (
-                    <>{isLoginForm ? "Sign In" : "Create Account"}</>
-                  )}
-                </button>
-              </form>
-
-              {isLoginForm && (
-                <p className="text-center text-[#EAE5DC]/60 text-xs mt-6 font-sans">
-                  Don&apos;t have an account?{" "}
-                  <button
-                    onClick={() => setIsLoginForm(false)}
-                    className="text-[#EAE5DC] hover:text-[#EAE5DC]/80 underline font-medium transition-colors"
-                  >
-                    Sign up
-                  </button>
-                </p>
-              )}
-
-              <div className="mt-6 p-4 bg-black/30 rounded-xl border border-[#EAE5DC]/20">
-                <p className="text-[#EAE5DC]/60 text-xs text-center">
-                  <strong>Secure:</strong> Your data is protected with
-                  enterprise-grade encryption.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Error Modal */}
-      {showErrorModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-red-500/10 to-red-500/5 backdrop-blur-xl rounded-2xl p-8 border border-red-500/20 shadow-2xl max-w-md w-full">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <svg
-                  className="w-8 h-8 text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-2">
-                {isLoginForm ? "Login Failed" : "Registration Failed"}
-              </h3>
-              <p className="text-[#EAE5DC]/60 text-sm">
-                {isLoginForm
-                  ? "Unable to sign in with the provided credentials."
-                  : "Unable to create your account at this time."}
-              </p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                  Error Details:
-                </h4>
-                <div className="bg-black/50 rounded-lg p-3 border border-red-500/20">
-                  <p className="text-red-400 font-mono text-sm break-all">
-                    {errorDetails}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={closeErrorModal}
-                className="flex-1 bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={() => {
-                  closeErrorModal();
-                  setIsLoginForm(!isLoginForm);
-                }}
-                className="flex-1 bg-transparent border border-[#EAE5DC]/30 text-[#EAE5DC] font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:bg-[#EAE5DC]/10 text-sm"
-              >
-                Switch to {isLoginForm ? "Sign Up" : "Sign In"}
-              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Login Success Modal */}
-      {showLoginSuccessModal && signInData && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl max-w-md w-full">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <svg
-                  className="w-8 h-8 text-green-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-2">
-                Login Successful!
-              </h3>
-              <p className="text-[#EAE5DC]/60 text-sm">
-                Welcome back! You have successfully signed in.
-              </p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="bg-black/30 rounded-lg p-4 border border-[#EAE5DC]/20">
-                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                  Login Details:
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Email:</span>
-                    <span className="text-[#EAE5DC] font-medium">
-                      {signInData.email || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Network:</span>
-                    <span className="text-[#EAE5DC] font-medium">Sepolia</span>
-                  </div>
-                  <div className="border-t border-[#EAE5DC]/20 pt-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[#EAE5DC]/60">Wallet Address:</span>
-                      <button
-                        onClick={() =>
-                          copyToClipboard(signInData.wallet_address)
-                        }
-                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
-                      <p className="text-[#EAE5DC] font-mono text-xs break-all">
-                        {signInData.wallet_address}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="border-t border-[#EAE5DC]/20 pt-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[#EAE5DC]/60">Access Token:</span>
-                      <button
-                        onClick={() => copyToClipboard(signInData.access_token)}
-                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
-                      <p className="text-[#EAE5DC] font-mono text-xs break-all">
-                        {signInData.access_token.substring(0, 50)}...
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={closeLoginSuccessModal}
-              className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && registrationData && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-[#EAE5DC]/10 to-[#EAE5DC]/5 backdrop-blur-xl rounded-2xl p-8 border border-[#EAE5DC]/20 shadow-2xl max-w-md w-full">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <svg
-                  className="w-8 h-8 text-green-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-heading font-bold text-[#EAE5DC] mb-2">
-                User Registered Successfully!
-              </h3>
-              <p className="text-[#EAE5DC]/60 text-sm">
-                Your account has been created successfully.
-              </p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="bg-black/30 rounded-lg p-4 border border-[#EAE5DC]/20">
-                <h4 className="text-sm font-heading font-medium text-[#EAE5DC] mb-3">
-                  Registration Details:
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Email:</span>
-                    <span className="text-[#EAE5DC] font-medium">
-                      {registrationData.email}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#EAE5DC]/60">Created At:</span>
-                    <span className="text-[#EAE5DC] font-medium">
-                      {new Date(registrationData.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="border-t border-[#EAE5DC]/20 pt-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[#EAE5DC]/60">Wallet Address:</span>
-                      <button
-                        onClick={() =>
-                          copyToClipboard(registrationData.wallet_address)
-                        }
-                        className="text-xs text-[#EAE5DC]/60 hover:text-[#EAE5DC] underline transition-colors"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                    <div className="bg-black/50 rounded-lg p-3 border border-[#EAE5DC]/20">
-                      <p className="text-[#EAE5DC] font-mono text-xs break-all">
-                        {registrationData.wallet_address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={closeSuccessModal}
-              className="w-full bg-gradient-to-r from-[#EAE5DC] to-[#EAE5DC]/90 text-black font-heading font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:from-[#EAE5DC]/90 hover:to-[#EAE5DC] shadow-lg hover:shadow-xl text-sm"
-            >
-              Continue to Sign In
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="bg-black/40 border-t border-[#EAE5DC]/20 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-3 md:mb-0">
-              <Image
-                src="/CavosLogo.png"
-                alt="Cavos Logo"
-                width={24}
-                height={24}
-                className="w-6 h-6"
-              />
-              <span className="text-[#EAE5DC] font-heading font-bold text-sm">
-                AEGIS CAVOS Template
-              </span>
-            </div>
-            <div className="text-center md:text-right">
-              <p className="text-[#EAE5DC]/60 text-xs">
-                &copy; 2024 AEGIS CAVOS. SDK integration template.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+        ) : (
+          // Login Form
+          <LoginForm onSignIn={handleSignIn} />
+        )}
+      </div>
     </div>
   );
 }
