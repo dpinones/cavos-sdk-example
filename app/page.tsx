@@ -27,7 +27,7 @@ export default function Home() {
     try {
       const response = await axios.post("/api/v1/execute", {
         walletAddress: user.wallet_address,
-        network: user.network,
+        network: process.env.NEXT_PUBLIC_STARKNET_NETWORK,
         accessToken: user.access_token,
         calls: [
           {
@@ -86,7 +86,7 @@ export default function Home() {
               </div>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-600">Network:</span> {user.network}
+                  <span className="text-gray-600">Network:</span> {process.env.NEXT_PUBLIC_STARKNET_NETWORK}
                 </div>
                 <div>
                   <span className="text-gray-600">Wallet:</span>{" "}

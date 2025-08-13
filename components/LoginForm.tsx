@@ -41,7 +41,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
           {
             email: formData.email,
             password: formData.password,
-            network: "sepolia",
+            network: process.env.NEXT_PUBLIC_STARKNET_NETWORK,
           }
         );
 
@@ -53,7 +53,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
         const response = await axios.post<ApiResponse>("/api/v1/auth/signUp", {
           email: formData.email,
           password: formData.password,
-          network: "sepolia",
+          network: process.env.NEXT_PUBLIC_STARKNET_NETWORK,
         });
 
         if (response.data.success) {
@@ -158,13 +158,13 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
             <div className="space-y-3 flex flex-col items-center">
               <SignInWithApple
                 appId={process.env.NEXT_PUBLIC_CAVOS_APP_ID || ""}
-                network="sepolia"
-                finalRedirectUri={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
+                network={process.env.NEXT_PUBLIC_STARKNET_NETWORK || ""}
+                finalRedirectUri={`localhost:3000/auth/callback`}
               />
               
               <SignInWithGoogle
                 appId={process.env.NEXT_PUBLIC_CAVOS_APP_ID || ""}
-                network="sepolia"
+                network={process.env.NEXT_PUBLIC_STARKNET_NETWORK || ""}
                 finalRedirectUri={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
               />
             </div>
