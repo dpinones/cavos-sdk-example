@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSetAtom } from "jotai";
 import { signInAtom } from "../../../lib/auth-atoms";
 import type { SignInResponse } from "../../../lib/types";
 
-export default function AuthCallback() {
+function AuthCallbackComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const signIn = useSetAtom(signInAtom);
@@ -87,5 +87,24 @@ export default function AuthCallback() {
         </p>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AuthCallbackComponent />
+    </Suspense>
   );
 }
