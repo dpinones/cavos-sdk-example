@@ -8,6 +8,10 @@ For the application to work correctly, you need to create a `.env` file in the p
 # Cavos Configuration
 CAVOS_ORG_SECRET=your_org_secret_here
 CAVOS_APP_ID=your_app_id_here
+
+# Cavos Configuration (Client-side - Next.js Public)
+NEXT_PUBLIC_CAVOS_APP_ID=your_app_id_here
+NEXT_PUBLIC_STARKNET_NETWORK=sepolia
 ```
 
 ## Setup Steps
@@ -29,8 +33,10 @@ CAVOS_APP_ID=your_app_id_here
 
    - `CAVOS_ORG_SECRET`: Your Cavos organization secret
    - `CAVOS_APP_ID`: Your Cavos application ID
+   - `NEXT_PUBLIC_CAVOS_APP_ID`: Same as CAVOS_APP_ID (for client-side use)
+   - `NEXT_PUBLIC_STARKNET_NETWORK`: Network to use (e.g., "sepolia")
 
-   > **💡 Where to get these credentials:** You can find your organization secret and app ID in the [Cavos Aegis Dashboard](https://aegis.cavos.xyz/dashboard)
+   > **�� Where to get these credentials:** You can find your organization secret and app ID in the [Cavos Aegis Dashboard](https://aegis.cavos.xyz/dashboard)
 
 4. **Restart the development server:**
 
