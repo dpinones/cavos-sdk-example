@@ -111,7 +111,7 @@ export async function getAllStores(params: ContractCallParams): Promise<Store[]>
     console.log('Calling get_all_stores with network:', params.network);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_all_stores');
+    const result = await contract.call('get_all_stores') as any;
     console.log('Raw contract result for get_all_stores:', result);
     
     // Convert contract result to Store array
@@ -141,7 +141,7 @@ export async function getAllCurrentPrices(params: ContractCallParams): Promise<A
     console.log('Calling get_all_current_prices with network:', params.network);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_all_current_prices');
+    const result = await contract.call('get_all_current_prices') as any;
     console.log('Raw contract result for get_all_current_prices:', result);
     
     // Convert contract result to price array
@@ -172,7 +172,7 @@ export async function getStore(params: ContractCallParams, storeId: string): Pro
     console.log('Calling get_store with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_store', [storeId]);
+    const result = await contract.call('get_store', [storeId]) as any;
     console.log('Raw contract result for get_store:', result);
     
     return {
@@ -194,7 +194,7 @@ export async function getCurrentPrice(params: ContractCallParams, storeId: strin
     console.log('Calling get_current_price with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_current_price', [storeId]);
+    const result = await contract.call('get_current_price', [storeId]) as any;
     console.log('Raw contract result for get_current_price:', result);
     
     return {
@@ -212,7 +212,7 @@ export async function getPriceHistory(params: ContractCallParams, storeId: strin
     console.log('Calling get_price_history with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_price_history', [storeId]);
+    const result = await contract.call('get_price_history', [storeId]) as any;
     console.log('Raw contract result for get_price_history:', result);
     
     const prices: Price[] = [];
@@ -237,7 +237,7 @@ export async function getThanksCount(params: ContractCallParams, storeId: string
     console.log('Calling get_thanks_count with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_thanks_count', [storeId]);
+    const result = await contract.call('get_thanks_count', [storeId]) as any;
     console.log('Raw contract result for get_thanks_count:', result);
     
     return Number(result);
@@ -252,7 +252,7 @@ export async function hasUserThanked(params: ContractCallParams, storeId: string
     console.log('Calling has_user_thanked with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('has_user_thanked', [storeId, params.walletAddress]);
+    const result = await contract.call('has_user_thanked', [storeId, params.walletAddress]) as any;
     console.log('Raw contract result for has_user_thanked:', result);
     
     // Handle boolean result from contract
@@ -268,7 +268,7 @@ export async function getReports(params: ContractCallParams, storeId: string): P
     console.log('Calling get_reports with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_reports', [storeId]);
+    const result = await contract.call('get_reports', [storeId]) as any;
     console.log('Raw contract result for get_reports:', result);
     
     const reports: Report[] = [];

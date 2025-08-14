@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import axios from "axios";
+import LandingPage from "../components/LandingPage";
 import LoginForm from "../components/LoginForm";
 import AdminPanel from "../components/AdminPanel";
 import ReportModal from "../components/ReportModal";
@@ -22,12 +23,20 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showLanding, setShowLanding] = useState(!isAuthenticated);
+  const [showLogin, setShowLogin] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Load stores data
+  // Handle authentication state changes
   useEffect(() => {
-    loadStores();
-  }, []);
+    if (isAuthenticated && user?.access_token) {
+      setShowLanding(false);
+      setShowLogin(false);
+      loadStores();
+    } else {
+      setShowLanding(true);
+    }
+  }, [isAuthenticated, user?.access_token]);
 
   const loadStores = async () => {
     setIsLoading(true);
@@ -136,17 +145,32 @@ export default function Home() {
     }
   };
 
+  const handleGetStarted = () => {
+    setShowLanding(false);
+    setShowLogin(true);
+  };
+
   const handleSignIn = (signInResponse: SignInResponse) => {
     signIn(signInResponse);
+    setShowLogin(false);
+    setShowLanding(false);
   };
 
   const handleSignOut = () => {
     signOut();
     setSelectedStore(null);
     setShowAdminPanel(false);
+    setShowLanding(true);
+    setShowLogin(false);
     setMessage("");
   };
 
+  // Show landing page only if not authenticated and landing is active
+  if (showLanding && !isAuthenticated) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
+
+  // Show login form if not authenticated
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
@@ -156,6 +180,19 @@ export default function Home() {
             <p className="text-gray-600">Encuentra los mejores precios de Fernet en Argentina</p>
           </div>
           <LoginForm onSignIn={handleSignIn} />
+          
+          {/* Back to landing button */}
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => {
+                setShowLogin(false);
+                setShowLanding(true);
+              }}
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+            >
+              ← Volver al inicio
+            </button>
+          </div>
         </div>
       </div>
     );
