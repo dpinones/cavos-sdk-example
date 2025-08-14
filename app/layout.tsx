@@ -4,8 +4,8 @@ import { JotaiProvider } from "../lib/jotai-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Aegis Example",
-  description: "Invisible Crypto Infrastructure",
+  title: "Fernet Barato",
+  description: "Encuentra los mejores precios de Fernet en Argentina",
 };
 
 export default function RootLayout({

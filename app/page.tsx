@@ -1,11 +1,105 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import axios from "axios";
 import LoginForm from "../components/LoginForm";
+import AdminPanel from "../components/AdminPanel";
+import ReportModal from "../components/ReportModal";
 import { userAtom, isAuthenticatedAtom, signInAtom, signOutAtom } from "../lib/auth-atoms";
-import type { ContractExecutionResult, SignInResponse } from "../lib/types";
+import { getAllStoresWithPrices, giveThanks } from "../lib/contract";
+import type { ContractExecutionResult, SignInResponse, StoreWithPrice, FilterOptions } from "../lib/types";
+
+// Mock data for development - this would come from contract calls in production
+const MOCK_STORES: StoreWithPrice[] = [
+  {
+    id: "4",
+    name: "Jumbo Unicenter",
+    address: "Parana 3745, Martinez, Buenos Aires",
+    phone: "+54 11 4837-8000",
+    hours: "Lun-Dom: 8:00-22:00",
+    uri: "https://www.jumbo.com.ar/tienda/unicenter",
+    current_price: {
+      store_id: "4",
+      price_in_cents: 175000,
+      timestamp: 1708012800,
+      updated_by: "admin"
+    },
+    thanks_count: 2,
+    reports: []
+  },
+  {
+    id: "5",
+    name: "La Anonima Recoleta",
+    address: "Av. Las Heras 2100, Recoleta, CABA",
+    phone: "+54 11 4801-2300",
+    hours: "Lun-Sab: 7:30-24:00, Dom: 8:00-23:00",
+    uri: "https://www.laanonimaonline.com.ar/recoleta",
+    current_price: {
+      store_id: "5",
+      price_in_cents: 181000,
+      timestamp: 1708012800,
+      updated_by: "admin"
+    },
+    thanks_count: 0,
+    reports: []
+  },
+  {
+    id: "3",
+    name: "Coto Belgrano",
+    address: "Av. Cabildo 2602, Belgrano, CABA",
+    phone: "+54 11 4781-4500",
+    hours: "Lun-Dom: 8:30-21:30",
+    uri: "https://www.coto.com.ar/sucursales/belgrano",
+    current_price: {
+      store_id: "3",
+      price_in_cents: 184000,
+      timestamp: 1708012800,
+      updated_by: "admin"
+    },
+    thanks_count: 1,
+    reports: []
+  },
+  {
+    id: "1",
+    name: "Carrefour Villa Crespo",
+    address: "Av. Corrientes 4817, Villa Crespo, CABA",
+    phone: "+54 11 4857-3200",
+    hours: "Lun-Dom: 8:00-22:00",
+    uri: "https://www.carrefour.com.ar/tiendas/villa-crespo",
+    current_price: {
+      store_id: "1",
+      price_in_cents: 189000,
+      timestamp: 1708012800,
+      updated_by: "admin"
+    },
+    thanks_count: 0,
+    reports: []
+  },
+  {
+    id: "2",
+    name: "Disco Palermo",
+    address: "Av. Santa Fe 3253, Palermo, CABA",
+    phone: "+54 11 4831-9500",
+    hours: "Lun-Sab: 8:00-24:00, Dom: 9:00-22:00",
+    uri: "https://www.disco.com.ar/tienda/palermo",
+    current_price: {
+      store_id: "2",
+      price_in_cents: 205000,
+      timestamp: 1708012800,
+      updated_by: "admin"
+    },
+    thanks_count: 0,
+    reports: [
+      {
+        store_id: "2",
+        user: "user1",
+        description: "Precio incorrecto reportado",
+        timestamp: 1708012800
+      }
+    ]
+  }
+];
 
 export default function Home() {
   const user = useAtomValue(userAtom);
@@ -13,47 +107,124 @@ export default function Home() {
   const signIn = useSetAtom(signInAtom);
   const signOut = useSetAtom(signOutAtom);
 
-  const [isExecuting, setIsExecuting] = useState(false);
+  const [stores, setStores] = useState<StoreWithPrice[]>([]);
+  const [selectedStore, setSelectedStore] = useState<StoreWithPrice | null>(null);
+  const [filter, setFilter] = useState<FilterOptions>({ sortBy: 'price' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [message, setMessage] = useState("");
-  const [contractResult, setContractResult] =
-    useState<ContractExecutionResult | null>(null);
 
-  const handleExecuteContract = async () => {
-    if (!user?.access_token) return;
+  // Load stores data
+  useEffect(() => {
+    loadStores();
+  }, []);
 
-    setIsExecuting(true);
-    setMessage("");
-
+  const loadStores = async () => {
+    setIsLoading(true);
     try {
-      const response = await axios.post("/api/v1/execute", {
-        walletAddress: user.wallet_address,
-        network: process.env.NEXT_PUBLIC_STARKNET_NETWORK,
-        accessToken: user.access_token,
-        calls: [
-          {
-            contractAddress:
-              "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-            entrypoint: "approve",
-            calldata: [
-              "0x1234567890123456789012345678901234567890",
-              "500000000000000000",
-              "0",
-            ],
-          },
-        ],
-      });
-
-      setContractResult(response.data);
-      setMessage("Contract executed successfully!");
-    } catch (error) {
-      let errorMessage = "Contract execution failed";
-      if (axios.isAxiosError(error)) {
-        errorMessage =
-          error.response?.data?.message || "Contract execution failed";
+      let storesData: StoreWithPrice[];
+      
+      if (user?.access_token) {
+        // Try to load from contract if user is authenticated
+        try {
+          const contractParams = {
+            walletAddress: user.wallet_address,
+            network: process.env.NEXT_PUBLIC_STARKNET_NETWORK || 'sepolia',
+            accessToken: user.access_token
+          };
+          
+          storesData = await getAllStoresWithPrices(contractParams);
+          console.log('Loaded stores from contract:', storesData);
+        } catch (contractError) {
+          console.log('Contract call failed, using mock data:', contractError);
+          storesData = MOCK_STORES;
+        }
+      } else {
+        // Use mock data if no user authentication
+        storesData = MOCK_STORES;
       }
-      setMessage(errorMessage);
+
+      // Calculate price differences
+      const cheapestPrice = Math.min(...storesData.map(s => s.current_price.price_in_cents));
+      const storesWithDifferences = storesData.map(store => ({
+        ...store,
+        price_difference_from_cheapest: store.current_price.price_in_cents - cheapestPrice,
+        price_difference_percentage: ((store.current_price.price_in_cents - cheapestPrice) / cheapestPrice) * 100
+      }));
+      
+      setStores(sortStores(storesWithDifferences, filter.sortBy));
+    } catch (error) {
+      console.error('Error loading stores:', error);
+      setMessage('Error al cargar las tiendas');
+      // Fallback to mock data on any error
+      const cheapestPrice = Math.min(...MOCK_STORES.map(s => s.current_price.price_in_cents));
+      const storesWithDifferences = MOCK_STORES.map(store => ({
+        ...store,
+        price_difference_from_cheapest: store.current_price.price_in_cents - cheapestPrice,
+        price_difference_percentage: ((store.current_price.price_in_cents - cheapestPrice) / cheapestPrice) * 100
+      }));
+      setStores(sortStores(storesWithDifferences, filter.sortBy));
     } finally {
-      setIsExecuting(false);
+      setIsLoading(false);
+    }
+  };
+
+  const sortStores = (stores: StoreWithPrice[], sortBy: 'price' | 'distance') => {
+    return [...stores].sort((a, b) => {
+      if (sortBy === 'price') {
+        return a.current_price.price_in_cents - b.current_price.price_in_cents;
+      }
+      // For distance sorting, we'd need geolocation - for now just return as is
+      return 0;
+    });
+  };
+
+  const formatPrice = (priceInCents: number) => {
+    return `$${(priceInCents / 100).toLocaleString('es-AR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  };
+
+  const formatTimestamp = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleString('es-AR');
+  };
+
+  const isOldPrice = (timestamp: number) => {
+    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    return timestamp * 1000 < weekAgo;
+  };
+
+  const handleGiveThanks = async (storeId: string) => {
+    if (!user?.access_token) return;
+    
+    try {
+      const contractParams = {
+        walletAddress: user.wallet_address,
+        network: process.env.NEXT_PUBLIC_STARKNET_NETWORK || 'sepolia',
+        accessToken: user.access_token
+      };
+
+      // Call the contract's give_thanks function
+      await giveThanks(contractParams, storeId);
+      setMessage('¡Gracias enviado exitosamente!');
+      
+      // Update local state immediately for better UX
+      setStores(prev => prev.map(store => 
+        store.id === storeId 
+          ? { ...store, thanks_count: store.thanks_count + 1 }
+          : store
+      ));
+      
+      // Refresh data from contract after a delay
+      setTimeout(() => {
+        loadStores();
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error giving thanks:', error);
+      setMessage('Error al enviar gracias. Intente nuevamente.');
     }
   };
 
@@ -63,77 +234,311 @@ export default function Home() {
 
   const handleSignOut = () => {
     signOut();
-    setContractResult(null);
+    setSelectedStore(null);
+    setShowAdminPanel(false);
     setMessage("");
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {isAuthenticated && user ? (
-          // Dashboard/Contract Execution
-          <div className="space-y-6">
-            {/* User Info */}
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-lg font-semibold">Dashboard</h2>
-                <button
-                  onClick={handleSignOut}
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
-                  Sign Out
-                </button>
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">🍷 Fernet Barato</h1>
+            <p className="text-gray-600">Encuentra los mejores precios de Fernet en Argentina</p>
+          </div>
+          <LoginForm onSignIn={handleSignIn} />
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedStore) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-md mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setSelectedStore(null)}
+                className="text-blue-600 text-sm font-medium"
+              >
+                ← Volver
+              </button>
+              <h1 className="text-lg font-semibold">Detalles de Tienda</h1>
+              <button
+                onClick={handleSignOut}
+                className="text-red-600 text-sm"
+              >
+                Salir
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Store Details */}
+        <div className="max-w-md mx-auto p-4 space-y-4">
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-xl font-bold text-gray-900">{selectedStore.name}</h2>
+              {selectedStore.reports.length > 0 && (
+                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+                  ⚠️ Reportado
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-gray-600">📍 Dirección:</span>
+                <p className="font-medium">{selectedStore.address}</p>
               </div>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-600">Network:</span> {process.env.NEXT_PUBLIC_STARKNET_NETWORK}
-                </div>
-                <div>
-                  <span className="text-gray-600">Wallet:</span>{" "}
-                  <span className="font-mono text-xs break-all">
-                    {user.wallet_address}
-                  </span>
-                </div>
+              
+              <div>
+                <span className="text-gray-600">📞 Teléfono:</span>
+                <p className="font-medium">{selectedStore.phone}</p>
+              </div>
+              
+              <div>
+                <span className="text-gray-600">🕒 Horarios:</span>
+                <p className="font-medium">{selectedStore.hours}</p>
               </div>
             </div>
+          </div>
 
-            {/* Contract Execution */}
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <h3 className="text-lg font-semibold mb-4">Execute Contract</h3>
-              
-              {message && (
-                <div className={`mb-4 p-3 rounded text-sm ${
-                  message.includes("success") 
-                    ? "bg-green-50 text-green-700 border border-green-200" 
-                    : "bg-red-50 text-red-700 border border-red-200"
-                }`}>
-                  {message}
-                </div>
+          {/* Price Info */}
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <h3 className="text-lg font-semibold mb-3">Precio Actual</h3>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-2xl font-bold text-green-600">
+                {formatPrice(selectedStore.current_price.price_in_cents)}
+              </span>
+              {selectedStore.price_difference_from_cheapest! > 0 && (
+                <span className="text-red-600 text-sm">
+                  +{formatPrice(selectedStore.price_difference_from_cheapest!)} 
+                  ({selectedStore.price_difference_percentage!.toFixed(1)}%)
+                </span>
               )}
-
-              <button
-                onClick={handleExecuteContract}
-                disabled={isExecuting}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isExecuting ? "Executing..." : "Execute Contract"}
-              </button>
-
-              {contractResult && (
-                <div className="mt-4 p-3 bg-gray-50 rounded border">
-                  <h4 className="text-sm font-medium mb-2">Result:</h4>
-                  <pre className="text-xs overflow-auto whitespace-pre-wrap">
-                    {JSON.stringify(contractResult, null, 2)}
-                  </pre>
-                </div>
+            </div>
+            
+            <div className="text-xs text-gray-500 flex items-center gap-2">
+              <span>Actualizado: {formatTimestamp(selectedStore.current_price.timestamp)}</span>
+              {isOldPrice(selectedStore.current_price.timestamp) && (
+                <span className="text-yellow-600">⚠️</span>
               )}
             </div>
           </div>
+
+          {/* Thanks Section */}
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Agradecimientos</h3>
+                <p className="text-sm text-gray-600">{selectedStore.thanks_count} personas agradecieron</p>
+              </div>
+              <button
+                onClick={() => handleGiveThanks(selectedStore.id)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
+              >
+                👍 Dar Gracias
+              </button>
+            </div>
+          </div>
+
+          {/* Report Section */}
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">¿Hay algún problema?</h3>
+                <p className="text-sm text-gray-600">
+                  {selectedStore.reports.length > 0 
+                    ? `${selectedStore.reports.length} reporte(s) registrado(s)`
+                    : 'Ayúdanos a mantener la información actualizada'
+                  }
+                </p>
+              </div>
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700"
+              >
+                ⚠️ Reportar
+              </button>
+            </div>
+            
+            {selectedStore.reports.length > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <p className="text-xs text-gray-500">
+                  Último reporte: {selectedStore.reports[0]?.description}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {message && (
+            <div className="bg-green-50 text-green-700 p-3 rounded border border-green-200 text-sm">
+              {message}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">🍷 Fernet Barato</h1>
+              <p className="text-sm text-gray-600">Mejores precios cerca tuyo</p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="text-red-600 text-sm"
+            >
+              Salir
+            </button>
+          </div>
+
+          {/* Sort Filters */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter({ ...filter, sortBy: 'price' })}
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                filter.sortBy === 'price'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Precio
+            </button>
+            <button
+              onClick={() => setFilter({ ...filter, sortBy: 'distance' })}
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                filter.sortBy === 'distance'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Distancia
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Store List */}
+      <div className="max-w-md mx-auto p-4">
+        <h2 className="text-lg font-semibold mb-4">Resultados</h2>
+        
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-2">Cargando precios...</p>
+          </div>
         ) : (
-          // Login Form
-          <LoginForm onSignIn={handleSignIn} />
+          <div className="space-y-3">
+            {stores.map((store, index) => (
+              <div
+                key={store.id}
+                onClick={() => setSelectedStore(store)}
+                className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{store.name}</h3>
+                      {index === 0 && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                          ⭐ MEJOR PRECIO
+                        </span>
+                      )}
+                      {store.reports.length > 0 && (
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+                          ⚠️
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {store.address.split(',')[0]}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-green-600">
+                      {formatPrice(store.current_price.price_in_cents)}
+                    </div>
+                    {store.price_difference_from_cheapest! > 0 && (
+                      <div className="text-xs text-red-600">
+                        +{formatPrice(store.price_difference_from_cheapest!)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>
+                    {store.thanks_count > 0 && `👍 ${store.thanks_count}`}
+                    {store.thanks_count > 0 && " • "}
+                    1.2km {/* Mock distance */}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {formatTimestamp(store.current_price.timestamp)}
+                    {isOldPrice(store.current_price.timestamp) && (
+                      <span className="text-yellow-600">⚠️</span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Admin Panel Toggle */}
+      {user && (
+        <div className="fixed bottom-4 right-4">
+          <button
+            onClick={() => setShowAdminPanel(!showAdminPanel)}
+            className="bg-orange-600 text-white p-3 rounded-full shadow-lg hover:bg-orange-700"
+          >
+            ⚙️
+          </button>
+        </div>
+      )}
+
+      {/* Admin Panel */}
+      {showAdminPanel && (
+        <AdminPanel
+          stores={stores}
+          onClose={() => setShowAdminPanel(false)}
+          onUpdate={() => {
+            setMessage('');
+            loadStores();
+          }}
+        />
+      )}
+
+      {message && (
+        <div className="fixed bottom-20 left-4 right-4">
+          <div className="bg-green-50 text-green-700 p-3 rounded border border-green-200 text-sm max-w-md mx-auto">
+            {message}
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && selectedStore && (
+        <ReportModal
+          store={selectedStore}
+          onClose={() => setShowReportModal(false)}
+          onReportSubmitted={() => {
+            setMessage('Reporte enviado exitosamente');
+            loadStores();
+          }}
+        />
+      )}
     </div>
   );
 }
