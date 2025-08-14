@@ -249,3 +249,4 @@ La aplicación está lista para integrarse con contratos Cairo:
 ---
 
 **🎉 La aplicación Fernet Barato está lista para uso, con todas las funcionalidades requeridas implementadas y un diseño mobile-first moderno y funcional.**
+
