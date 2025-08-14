@@ -257,7 +257,7 @@ export default function Home() {
             <h3 className="text-lg font-semibold mb-3">Precio Actual</h3>
             <div className="flex items-center justify-between mb-3">
               <span className="text-2xl font-bold text-green-600">
-                {formatPrice(selectedStore.current_price.price_in_cents)}
+                {selectedStore.price_display?.formatted_price || formatPrice(selectedStore.price_display?.price_in_cents || 0)}
               </span>
               {selectedStore.price_difference_from_cheapest! > 0 && (
                 <span className="text-red-600 text-sm">
@@ -412,7 +412,7 @@ export default function Home() {
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-green-600">
-                      {formatPrice(store.current_price.price_in_cents)}
+                      {store.price_display?.formatted_price || formatPrice(store.price_display?.price_in_cents || 0)}
                     </div>
                     {store.price_difference_from_cheapest! > 0 && (
                       <div className="text-xs text-red-600">

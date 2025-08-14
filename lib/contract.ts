@@ -53,21 +53,71 @@ function byteArrayToString(byteArray: any): string {
 // Helper function to convert u256 to number (price in cents)
 function u256ToNumber(u256Value: any): number {
   try {
-    if (typeof u256Value === 'string') {
-      return parseInt(u256Value);
+    console.log('Converting u256 value:', u256Value, 'type:', typeof u256Value);
+    
+    // Handle null/undefined
+    if (u256Value === null || u256Value === undefined) {
+      console.warn('u256 value is null/undefined');
+      return 0;
     }
+    
+    // Handle string representation
+    if (typeof u256Value === 'string') {
+      const parsed = parseInt(u256Value, 10);
+      if (isNaN(parsed)) {
+        console.warn('Failed to parse string u256:', u256Value);
+        return 0;
+      }
+      return parsed;
+    }
+    
+    // Handle direct number
     if (typeof u256Value === 'number') {
+      if (isNaN(u256Value)) {
+        console.warn('u256 value is NaN:', u256Value);
+        return 0;
+      }
       return u256Value;
     }
+    
+    // Handle BigInt
+    if (typeof u256Value === 'bigint') {
+      return Number(u256Value);
+    }
+    
+    // Handle object formats from Starknet
     if (u256Value && typeof u256Value === 'object') {
       // Handle { low: number, high: number } format
       if ('low' in u256Value && 'high' in u256Value) {
-        return u256Value.low + (u256Value.high * Math.pow(2, 128));
+        const low = Number(u256Value.low);
+        const high = Number(u256Value.high);
+        if (high === 0) {
+          return low; // Most prices will fit in low part
+        }
+        return low + (high * Math.pow(2, 128));
+      }
+      
+      // Handle array format [low, high]
+      if (Array.isArray(u256Value) && u256Value.length === 2) {
+        const low = Number(u256Value[0]);
+        const high = Number(u256Value[1]);
+        if (high === 0) {
+          return low;
+        }
+        return low + (high * Math.pow(2, 128));
       }
     }
-    return parseInt(u256Value.toString());
+    
+    // Last resort: convert to string and parse
+    const stringValue = u256Value.toString();
+    const parsed = parseInt(stringValue, 10);
+    if (isNaN(parsed)) {
+      console.warn('Failed to convert u256 to number:', u256Value);
+      return 0;
+    }
+    return parsed;
   } catch (error) {
-    console.warn('Error converting u256 to number:', error);
+    console.error('Error converting u256 to number:', error, 'value:', u256Value);
     return 0;
   }
 }
@@ -377,7 +427,10 @@ export async function addStore(
 
 // Helper function to convert Price to PriceDisplay for frontend
 export function priceToDisplay(price: Price, storeId: string): PriceDisplay {
+  console.log('priceToDisplay input:', { price, storeId });
   const priceInCents = u256ToNumber(price.price);
+  console.log('priceToDisplay converted:', { priceInCents, formatted: formatPrice(priceInCents) });
+  
   return {
     store_id: storeId,
     price_in_cents: priceInCents,

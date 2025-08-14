@@ -174,7 +174,7 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   <option value="">Seleccione una tienda...</option>
                   {stores.map((store) => (
                     <option key={store.id} value={store.id}>
-                      {store.name} - {store.price_display?.formatted_price || `$${(parseInt(store.current_price.price) / 100).toFixed(2)}`}
+                      {store.name} - {store.price_display?.formatted_price || `$0.00`}
                     </option>
                   ))}
                 </select>
