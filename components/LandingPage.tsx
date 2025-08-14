@@ -17,7 +17,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               Fernet Barato
             </h1>
             <p className="text-lg text-gray-600 mb-4">
-              Los mejores precios de Fernet en Argentina
+              Los mejores precios cerca tuyo
             </p>
           </div>
 
@@ -34,10 +34,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             <div className="flex items-center justify-center gap-3 text-gray-700">
               <span className="text-2xl">⭐</span>
               <span className="text-sm font-medium">Datos verificados por la comunidad</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-gray-700">
-              <span className="text-2xl">🔗</span>
-              <span className="text-sm font-medium">Powered by Starknet blockchain</span>
             </div>
           </div>
         </div>
@@ -57,7 +53,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
+        {/* <div className="mt-12 pt-8 border-t border-gray-200">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-orange-600">100%</div>
@@ -72,7 +68,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               <div className="text-xs text-gray-600">Seguro</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

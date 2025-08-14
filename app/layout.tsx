@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Fernet Barato",
-  description: "Encuentra los mejores precios de Fernet en Argentina",
+  description: "Los mejores precios cerca tuyo",
 };
 
 export default function RootLayout({

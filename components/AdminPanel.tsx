@@ -208,21 +208,6 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   </p>
                 )}
               </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <span className="text-yellow-600">⚠️</span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-yellow-700">
-                      <strong>Importante:</strong> Esta acción escribirá en la blockchain de Starknet.
-                      Los datos serán inmutables y públicamente verificables.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading || !selectedStoreId || !newPrice || !validatePrice(newPrice)}
@@ -302,19 +287,6 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                 />
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <span className="text-blue-600">ℹ️</span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-blue-700">
-                      La tienda se agregará a la blockchain. Después de crearla, podrá actualizar sus precios.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading || !newStore.name || !newStore.address}
@@ -324,16 +296,6 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
               </button>
             </form>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t px-6 py-4 bg-gray-50">
-          <div className="flex items-center text-xs text-gray-600">
-            <span className="mr-2">🔒</span>
-            <span>
-              Todas las operaciones son seguras y se registran en Starknet blockchain
-            </span>
-          </div>
         </div>
       </div>
     </div>
