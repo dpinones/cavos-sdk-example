@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Provider, Contract, RpcProvider, shortString, CallData, byteArray } from 'starknet';
+import { Contract, RpcProvider, shortString, CallData, byteArray } from 'starknet';
 import type { Store, Price, StoreWithPrice, Report, PriceDisplay } from './types';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './contract-config';
 
@@ -25,33 +25,40 @@ function getContractForReading(network: string): Contract {
 }
 
 // Helper function to convert ByteArray to string
-function byteArrayToString(byteArray: any): string {
+function byteArrayToString(byteArray: unknown): string {
   if (!byteArray || typeof byteArray === 'string') {
-    return byteArray || '';
+    return (byteArray as string) || '';
   }
   
   try {
     // Handle different ByteArray formats
-    if (byteArray.data && Array.isArray(byteArray.data)) {
+    const byteArrayObj = byteArray as { 
+      data?: unknown[]; 
+      pending_word?: string; 
+      pending_word_len?: number;
+      toString?: () => string;
+    };
+    
+    if (byteArrayObj.data && Array.isArray(byteArrayObj.data)) {
       let result = '';
-      for (const item of byteArray.data) {
-        result += shortString.decodeShortString(item);
+      for (const item of byteArrayObj.data) {
+        result += shortString.decodeShortString(String(item));
       }
-      if (byteArray.pending_word && byteArray.pending_word_len > 0) {
-        result += shortString.decodeShortString(byteArray.pending_word).slice(0, byteArray.pending_word_len);
+      if (byteArrayObj.pending_word && byteArrayObj.pending_word_len && byteArrayObj.pending_word_len > 0) {
+        result += shortString.decodeShortString(byteArrayObj.pending_word).slice(0, byteArrayObj.pending_word_len);
       }
       return result;
     }
     
-    return shortString.decodeShortString(byteArray.toString());
+    return shortString.decodeShortString(String(byteArray));
   } catch (error) {
     console.warn('Error decoding ByteArray:', error);
-    return byteArray.toString() || '';
+    return String(byteArray) || '';
   }
 }
 
 // Helper function to convert u256 to number (price in cents)
-function u256ToNumber(u256Value: any): number {
+function u256ToNumber(u256Value: unknown): number {
   try {
     console.log('Converting u256 value:', u256Value, 'type:', typeof u256Value);
     
@@ -87,10 +94,12 @@ function u256ToNumber(u256Value: any): number {
     
     // Handle object formats from Starknet
     if (u256Value && typeof u256Value === 'object') {
+      const u256Obj = u256Value as { low?: unknown; high?: unknown } | unknown[];
+      
       // Handle { low: number, high: number } format
-      if ('low' in u256Value && 'high' in u256Value) {
-        const low = Number(u256Value.low);
-        const high = Number(u256Value.high);
+      if ('low' in u256Obj && 'high' in u256Obj) {
+        const low = Number(u256Obj.low);
+        const high = Number(u256Obj.high);
         if (high === 0) {
           return low; // Most prices will fit in low part
         }
@@ -98,9 +107,9 @@ function u256ToNumber(u256Value: any): number {
       }
       
       // Handle array format [low, high]
-      if (Array.isArray(u256Value) && u256Value.length === 2) {
-        const low = Number(u256Value[0]);
-        const high = Number(u256Value[1]);
+      if (Array.isArray(u256Obj) && u256Obj.length === 2) {
+        const low = Number(u256Obj[0]);
+        const high = Number(u256Obj[1]);
         if (high === 0) {
           return low;
         }
@@ -109,7 +118,7 @@ function u256ToNumber(u256Value: any): number {
     }
     
     // Last resort: convert to string and parse
-    const stringValue = u256Value.toString();
+    const stringValue = String(u256Value);
     const parsed = parseInt(stringValue, 10);
     if (isNaN(parsed)) {
       console.warn('Failed to convert u256 to number:', u256Value);
@@ -162,20 +171,28 @@ export async function getAllStores(params: ContractCallParams): Promise<Store[]>
     console.log('Calling get_all_stores with network:', params.network);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_all_stores') as any;
+    const result = await contract.call('get_all_stores');
     console.log('Raw contract result for get_all_stores:', result);
     
     // Convert contract result to Store array
     const stores: Store[] = [];
     if (Array.isArray(result)) {
       for (const storeData of result) {
+        const store = storeData as {
+          id: { toString(): string };
+          name: unknown;
+          address: unknown;
+          phone: unknown;
+          hours: unknown;
+          URI: unknown;
+        };
         stores.push({
-          id: storeData.id.toString(),
-          name: byteArrayToString(storeData.name),
-          address: byteArrayToString(storeData.address),
-          phone: byteArrayToString(storeData.phone),
-          hours: byteArrayToString(storeData.hours),
-          URI: byteArrayToString(storeData.URI)
+          id: store.id.toString(),
+          name: byteArrayToString(store.name),
+          address: byteArrayToString(store.address),
+          phone: byteArrayToString(store.phone),
+          hours: byteArrayToString(store.hours),
+          URI: byteArrayToString(store.URI)
         });
       }
     }
@@ -192,7 +209,7 @@ export async function getAllCurrentPrices(params: ContractCallParams): Promise<A
     console.log('Calling get_all_current_prices with network:', params.network);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_all_current_prices') as any;
+    const result = await contract.call('get_all_current_prices');
     console.log('Raw contract result for get_all_current_prices:', result);
     
     // Convert contract result to price array
@@ -200,7 +217,10 @@ export async function getAllCurrentPrices(params: ContractCallParams): Promise<A
     if (Array.isArray(result)) {
       for (const priceData of result) {
         // priceData should be [store_id, Price] tuple
-        const [storeId, priceInfo] = priceData;
+        const [storeId, priceInfo] = priceData as [
+          { toString(): string },
+          { price: { toString(): string }; timestamp: number }
+        ];
         prices.push({
           store_id: storeId.toString(),
           price: {
@@ -223,16 +243,25 @@ export async function getStore(params: ContractCallParams, storeId: string): Pro
     console.log('Calling get_store with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_store', [storeId]) as any;
+    const result = await contract.call('get_store', [storeId]);
     console.log('Raw contract result for get_store:', result);
     
+    const store = result as {
+      id: { toString(): string };
+      name: unknown;
+      address: unknown;
+      phone: unknown;
+      hours: unknown;
+      URI: unknown;
+    };
+    
     return {
-      id: result.id.toString(),
-      name: byteArrayToString(result.name),
-      address: byteArrayToString(result.address),
-      phone: byteArrayToString(result.phone),
-      hours: byteArrayToString(result.hours),
-      URI: byteArrayToString(result.URI)
+      id: store.id.toString(),
+      name: byteArrayToString(store.name),
+      address: byteArrayToString(store.address),
+      phone: byteArrayToString(store.phone),
+      hours: byteArrayToString(store.hours),
+      URI: byteArrayToString(store.URI)
     };
   } catch (error) {
     console.error('Error getting store:', error);
@@ -245,12 +274,17 @@ export async function getCurrentPrice(params: ContractCallParams, storeId: strin
     console.log('Calling get_current_price with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_current_price', [storeId]) as any;
+    const result = await contract.call('get_current_price', [storeId]);
     console.log('Raw contract result for get_current_price:', result);
     
+    const price = result as {
+      price: { toString(): string };
+      timestamp: number;
+    };
+    
     return {
-      price: result.price.toString(),
-      timestamp: Number(result.timestamp)
+      price: price.price.toString(),
+      timestamp: Number(price.timestamp)
     };
   } catch (error) {
     console.error('Error getting current price:', error);
@@ -263,15 +297,19 @@ export async function getPriceHistory(params: ContractCallParams, storeId: strin
     console.log('Calling get_price_history with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_price_history', [storeId]) as any;
+    const result = await contract.call('get_price_history', [storeId]);
     console.log('Raw contract result for get_price_history:', result);
     
     const prices: Price[] = [];
     if (Array.isArray(result)) {
       for (const priceData of result) {
+        const price = priceData as {
+          price: { toString(): string };
+          timestamp: number;
+        };
         prices.push({
-          price: priceData.price.toString(),
-          timestamp: Number(priceData.timestamp)
+          price: price.price.toString(),
+          timestamp: Number(price.timestamp)
         });
       }
     }
@@ -288,7 +326,7 @@ export async function getThanksCount(params: ContractCallParams, storeId: string
     console.log('Calling get_thanks_count with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_thanks_count', [storeId]) as any;
+    const result = await contract.call('get_thanks_count', [storeId]);
     console.log('Raw contract result for get_thanks_count:', result);
     
     return Number(result);
@@ -303,11 +341,12 @@ export async function hasUserThanked(params: ContractCallParams, storeId: string
     console.log('Calling has_user_thanked with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('has_user_thanked', [storeId, params.walletAddress]) as any;
+    const result = await contract.call('has_user_thanked', [storeId, params.walletAddress]);
     console.log('Raw contract result for has_user_thanked:', result);
     
     // Handle boolean result from contract
-    return result === true || result === 1 || result?.toString() === '1';
+    const boolResult = result as boolean | number | { toString(): string };
+    return boolResult === true || boolResult === 1 || String(boolResult) === '1';
   } catch (error) {
     console.error('Error checking if user thanked:', error);
     throw error;
@@ -319,17 +358,23 @@ export async function getReports(params: ContractCallParams, storeId: string): P
     console.log('Calling get_reports with network:', params.network, 'storeId:', storeId);
     const contract = getContractForReading(params.network);
     
-    const result = await contract.call('get_reports', [storeId]) as any;
+    const result = await contract.call('get_reports', [storeId]);
     console.log('Raw contract result for get_reports:', result);
     
     const reports: Report[] = [];
     if (Array.isArray(result)) {
       for (const reportData of result) {
+        const report = reportData as {
+          store_id: { toString(): string };
+          description: unknown;
+          submitted_at: number;
+          submitted_by: { toString(): string };
+        };
         reports.push({
-          store_id: reportData.store_id.toString(),
-          description: byteArrayToString(reportData.description),
-          submitted_at: Number(reportData.submitted_at),
-          submitted_by: reportData.submitted_by.toString()
+          store_id: report.store_id.toString(),
+          description: byteArrayToString(report.description),
+          submitted_at: Number(report.submitted_at),
+          submitted_by: report.submitted_by.toString()
         });
       }
     }

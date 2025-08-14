@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '../lib/auth-atoms';
 import { submitReport } from '../lib/contract';
-import type { StoreWithPrice } from '../lib/types';
-
 interface ReportModalProps {
-  store: any;
+  store: {
+    id: string;
+    name: string;
+    address: string;
+  };
   onClose: () => void;
   onReportSubmitted: () => void;
 }

@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import axios from "axios";
+import { useState, useEffect, useCallback } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import LandingPage from "../components/LandingPage";
 import LoginForm from "../components/LoginForm";
 import AdminPanel from "../components/AdminPanel";
 import ReportModal from "../components/ReportModal";
 import { userAtom, isAuthenticatedAtom, signInAtom, signOutAtom } from "../lib/auth-atoms";
 import { getAllStoresWithPrices, giveThanks, priceToDisplay } from "../lib/contract";
-import type { ContractExecutionResult, SignInResponse, FilterOptions, PriceDisplay } from "../lib/types";
+import type { SignInResponse, FilterOptions } from "../lib/types";
 
 export default function Home() {
   const user = useAtomValue(userAtom);
@@ -17,28 +16,31 @@ export default function Home() {
   const signIn = useSetAtom(signInAtom);
   const signOut = useSetAtom(signOutAtom);
 
-  const [stores, setStores] = useState<any[]>([]);
-  const [selectedStore, setSelectedStore] = useState<any | null>(null);
+  type StoreWithDisplayData = {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+    hours: string;
+    URI: string;
+    current_price: { price: string; timestamp: number };
+    thanks_count: number;
+    reports: Array<{ description: string; submitted_at: number; submitted_by: string }>;
+    price_display: { store_id: string; price_in_cents: number; timestamp: number; formatted_price: string };
+    price_difference_from_cheapest: number;
+    price_difference_percentage: number;
+  };
+
+  const [stores, setStores] = useState<StoreWithDisplayData[]>([]);
+  const [selectedStore, setSelectedStore] = useState<StoreWithDisplayData | null>(null);
   const [filter, setFilter] = useState<FilterOptions>({ sortBy: 'price' });
   const [isLoading, setIsLoading] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLanding, setShowLanding] = useState(!isAuthenticated);
-  const [showLogin, setShowLogin] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Handle authentication state changes
-  useEffect(() => {
-    if (isAuthenticated && user?.access_token) {
-      setShowLanding(false);
-      setShowLogin(false);
-      loadStores();
-    } else {
-      setShowLanding(true);
-    }
-  }, [isAuthenticated, user?.access_token]);
-
-  const loadStores = async () => {
+  const loadStores = useCallback(async () => {
     setIsLoading(true);
     try {
       if (!user?.access_token) {
@@ -77,7 +79,16 @@ export default function Home() {
           : 0
       }));
       
-      setStores(sortStores(storesWithDifferences, filter.sortBy));
+      // Sort stores by price (cheapest first)
+      const sortedStores = [...storesWithDifferences].sort((a, b) => {
+        if (filter.sortBy === 'price') {
+          return a.price_display.price_in_cents - b.price_display.price_in_cents;
+        }
+        // For distance sorting, we'd need geolocation - for now just return as is
+        return 0;
+      });
+      
+      setStores(sortedStores);
     } catch (error) {
       console.error('Error loading stores:', error);
       setMessage('Error al cargar las tiendas desde el contrato');
@@ -85,17 +96,17 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.access_token, user?.wallet_address, filter.sortBy]);
 
-  const sortStores = (stores: any[], sortBy: 'price' | 'distance') => {
-    return [...stores].sort((a, b) => {
-      if (sortBy === 'price') {
-        return a.price_display.price_in_cents - b.price_display.price_in_cents;
-      }
-      // For distance sorting, we'd need geolocation - for now just return as is
-      return 0;
-    });
-  };
+  // Handle authentication state changes
+  useEffect(() => {
+    if (isAuthenticated && user?.access_token) {
+      setShowLanding(false);
+      loadStores();
+    } else {
+      setShowLanding(true);
+    }
+  }, [isAuthenticated, user?.access_token, loadStores]);
 
   const formatPrice = (priceInCents: number) => {
     return `$${(priceInCents / 100).toLocaleString('es-AR', {
@@ -147,12 +158,10 @@ export default function Home() {
 
   const handleGetStarted = () => {
     setShowLanding(false);
-    setShowLogin(true);
   };
 
   const handleSignIn = (signInResponse: SignInResponse) => {
     signIn(signInResponse);
-    setShowLogin(false);
     setShowLanding(false);
   };
 
@@ -161,7 +170,6 @@ export default function Home() {
     setSelectedStore(null);
     setShowAdminPanel(false);
     setShowLanding(true);
-    setShowLogin(false);
     setMessage("");
   };
 
@@ -185,7 +193,6 @@ export default function Home() {
           <div className="mt-6 text-center">
             <button
               onClick={() => {
-                setShowLogin(false);
                 setShowLanding(true);
               }}
               className="text-sm text-gray-600 hover:text-gray-800 underline"

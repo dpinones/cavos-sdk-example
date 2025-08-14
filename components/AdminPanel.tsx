@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '../lib/auth-atoms';
-import { updatePrice, addStore, getAllStores } from '../lib/contract';
-import type { Store, StoreWithPrice } from '../lib/types';
+import { updatePrice, addStore } from '../lib/contract';
 
 interface AdminPanelProps {
-  stores: any[];
+  stores: Array<{
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+    hours: string;
+    URI: string;
+    price_display?: { formatted_price: string };
+  }>;
   onClose: () => void;
   onUpdate: () => void;
 }

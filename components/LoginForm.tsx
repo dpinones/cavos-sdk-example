@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useSetAtom } from "jotai";
 import Image from "next/image";
 import axios from "axios";
 import { SignInWithGoogle, SignInWithApple } from "cavos-service-sdk";
-import { signInAtom } from "../lib/auth-atoms";
 import type { SignInResponse, ApiResponse } from "../lib/types";
 
 interface LoginFormProps {
