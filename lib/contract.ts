@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Contract, RpcProvider, shortString, CallData, byteArray } from 'starknet';
+import { Contract, RpcProvider, shortString, CallData, byteArray, cairo } from 'starknet';
 import type { Store, Price, StoreWithPrice, Report, PriceDisplay } from './types';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './contract-config';
 
@@ -438,12 +438,20 @@ export async function updatePrice(
   priceInCents: number
 ) {
   try {
+    console.log('Updating price:', { storeId, priceInCents });
     
-    // Convert price in cents to u256 format (as string for Starknet)
-    const priceU256 = priceInCents.toString();
+    // Convert price to proper u256 format using cairo.uint256
+    const priceU256 = cairo.uint256(priceInCents);
     
-    // Use CallData.compile to properly format the parameters
-    const calldata = CallData.compile([storeId, priceU256]);
+    console.log('Price as cairo.uint256:', priceU256);
+    
+    // Use CallData.compile with the properly formatted u256
+    const calldata = CallData.compile([
+      storeId,
+      priceU256
+    ]);
+    
+    console.log('Compiled calldata for updatePrice:', calldata);
     
     const result = await executeContractCall(
       params,
@@ -455,8 +463,26 @@ export async function updatePrice(
     console.log('Price updated successfully:', result);
     return result;
   } catch (error) {
-    console.error('Error updating price:', error);
-    throw error;
+    console.error('Error updating price with cairo.uint256:', error);
+    
+    // Fallback: try with simple number
+    try {
+      console.log('Retrying with simple number format...');
+      const calldata = CallData.compile([storeId, priceInCents]);
+      
+      const result = await executeContractCall(
+        params,
+        CONTRACT_ADDRESS,
+        "update_price",
+        calldata
+      );
+      
+      console.log('Price updated successfully with fallback:', result);
+      return result;
+    } catch (fallbackError) {
+      console.error('Both attempts failed:', fallbackError);
+      throw fallbackError;
+    }
   }
 }
 
