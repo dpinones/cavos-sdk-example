@@ -25,28 +25,26 @@ export interface ContractExecutionResult {
   };
 }
 
-// Fernet Barato specific types
+// Fernet Barato specific types (matching contract structs)
 export interface Store {
   id: string;
   name: string;
   address: string;
   phone: string;
   hours: string;
-  uri: string;
+  URI: string;
 }
 
 export interface Price {
-  store_id: string;
-  price_in_cents: number;
-  timestamp: number;
-  updated_by: string;
+  price: string; // u256 as string
+  timestamp: number; // u64
 }
 
 export interface Report {
   store_id: string;
-  user: string;
   description: string;
-  timestamp: number;
+  submitted_at: number;
+  submitted_by: string;
 }
 
 export interface StoreWithPrice extends Store {
@@ -55,6 +53,14 @@ export interface StoreWithPrice extends Store {
   reports: Report[];
   price_difference_from_cheapest?: number;
   price_difference_percentage?: number;
+}
+
+// Helper interface for displaying prices in frontend
+export interface PriceDisplay {
+  store_id: string;
+  price_in_cents: number; // For display purposes, converted from u256
+  timestamp: number;
+  formatted_price: string; // e.g., "$18.90"
 }
 
 export interface FilterOptions {

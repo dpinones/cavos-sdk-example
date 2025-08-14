@@ -7,7 +7,7 @@ import { updatePrice, addStore, getAllStores } from '../lib/contract';
 import type { Store, StoreWithPrice } from '../lib/types';
 
 interface AdminPanelProps {
-  stores: StoreWithPrice[];
+  stores: any[];
   onClose: () => void;
   onUpdate: () => void;
 }
@@ -28,7 +28,7 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
     address: '',
     phone: '',
     hours: '',
-    uri: ''
+    URI: ''
   });
 
   const handleUpdatePrice = async (e: React.FormEvent) => {
@@ -88,7 +88,7 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
         address: '',
         phone: '',
         hours: '',
-        uri: ''
+        URI: ''
       });
       
       // Refresh the stores data
@@ -174,7 +174,7 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   <option value="">Seleccione una tienda...</option>
                   {stores.map((store) => (
                     <option key={store.id} value={store.id}>
-                      {store.name} - ${(store.current_price.price_in_cents / 100).toFixed(2)}
+                      {store.name} - {store.price_display?.formatted_price || `$${(parseInt(store.current_price.price) / 100).toFixed(2)}`}
                     </option>
                   ))}
                 </select>
@@ -288,8 +288,8 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                 </label>
                 <input
                   type="url"
-                  value={newStore.uri}
-                  onChange={(e) => setNewStore({ ...newStore, uri: e.target.value })}
+                  value={newStore.URI}
+                  onChange={(e) => setNewStore({ ...newStore, URI: e.target.value })}
                   placeholder="https://www.carrefour.com.ar/tiendas/villa-crespo"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

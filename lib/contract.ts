@@ -1,13 +1,80 @@
 import axios from 'axios';
-import type { Store, Price, StoreWithPrice, Report } from './types';
-
-// Contract address - this would be configured via environment variables
-const CONTRACT_ADDRESS = "0x06b1ea5990a839008e7abb84b971fd667a4f537cb73dfa8a18a572ce02982a1a";
+import { Provider, Contract, RpcProvider, shortString } from 'starknet';
+import type { Store, Price, StoreWithPrice, Report, PriceDisplay } from './types';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from './contract-config';
 
 export interface ContractCallParams {
   walletAddress: string;
   network: string;
   accessToken: string;
+}
+
+// Helper function to get Starknet provider
+function getStarknetProvider(network: string): RpcProvider {
+  const rpcUrl = network === 'mainnet' 
+    ? 'https://starknet-mainnet.public.blastapi.io/rpc/v0_7'
+    : 'https://starknet-sepolia.public.blastapi.io/rpc/v0_7';
+  
+  return new RpcProvider({ nodeUrl: rpcUrl });
+}
+
+// Helper function to get contract instance for view calls
+function getContractForReading(network: string): Contract {
+  const provider = getStarknetProvider(network);
+  return new Contract(CONTRACT_ABI, CONTRACT_ADDRESS, provider);
+}
+
+// Helper function to convert ByteArray to string
+function byteArrayToString(byteArray: any): string {
+  if (!byteArray || typeof byteArray === 'string') {
+    return byteArray || '';
+  }
+  
+  try {
+    // Handle different ByteArray formats
+    if (byteArray.data && Array.isArray(byteArray.data)) {
+      let result = '';
+      for (const item of byteArray.data) {
+        result += shortString.decodeShortString(item);
+      }
+      if (byteArray.pending_word && byteArray.pending_word_len > 0) {
+        result += shortString.decodeShortString(byteArray.pending_word).slice(0, byteArray.pending_word_len);
+      }
+      return result;
+    }
+    
+    return shortString.decodeShortString(byteArray.toString());
+  } catch (error) {
+    console.warn('Error decoding ByteArray:', error);
+    return byteArray.toString() || '';
+  }
+}
+
+// Helper function to convert u256 to number (price in cents)
+function u256ToNumber(u256Value: any): number {
+  try {
+    if (typeof u256Value === 'string') {
+      return parseInt(u256Value);
+    }
+    if (typeof u256Value === 'number') {
+      return u256Value;
+    }
+    if (u256Value && typeof u256Value === 'object') {
+      // Handle { low: number, high: number } format
+      if ('low' in u256Value && 'high' in u256Value) {
+        return u256Value.low + (u256Value.high * Math.pow(2, 128));
+      }
+    }
+    return parseInt(u256Value.toString());
+  } catch (error) {
+    console.warn('Error converting u256 to number:', error);
+    return 0;
+  }
+}
+
+// Helper function to format price for display
+function formatPrice(priceInCents: number): string {
+  return `$${(priceInCents / 100).toFixed(2)}`;
 }
 
 // Function to execute contract calls through Cavos
@@ -38,25 +105,31 @@ async function executeContractCall(
   }
 }
 
-// Contract read functions (these would be view functions in production)
+// Contract read functions using real Starknet integration
 export async function getAllStores(params: ContractCallParams): Promise<Store[]> {
   try {
-    // In production, this would call the contract's get_all_stores function
-    // For now, we'll return mock data
-    console.log('Calling get_all_stores with params:', params);
+    console.log('Calling get_all_stores with network:', params.network);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation - replace with actual contract call
-    return [
-      {
-        id: "1",
-        name: "Carrefour Villa Crespo",
-        address: "Av. Corrientes 4817, Villa Crespo, CABA",
-        phone: "+54 11 4857-3200",
-        hours: "Lun-Dom: 8:00-22:00",
-        uri: "https://www.carrefour.com.ar/tiendas/villa-crespo"
-      },
-      // ... other stores
-    ];
+    const result = await contract.call('get_all_stores');
+    console.log('Raw contract result for get_all_stores:', result);
+    
+    // Convert contract result to Store array
+    const stores: Store[] = [];
+    if (Array.isArray(result)) {
+      for (const storeData of result) {
+        stores.push({
+          id: storeData.id.toString(),
+          name: byteArrayToString(storeData.name),
+          address: byteArrayToString(storeData.address),
+          phone: byteArrayToString(storeData.phone),
+          hours: byteArrayToString(storeData.hours),
+          URI: byteArrayToString(storeData.URI)
+        });
+      }
+    }
+    
+    return stores;
   } catch (error) {
     console.error('Error getting all stores:', error);
     throw error;
@@ -65,22 +138,29 @@ export async function getAllStores(params: ContractCallParams): Promise<Store[]>
 
 export async function getAllCurrentPrices(params: ContractCallParams): Promise<Array<{store_id: string, price: Price}>> {
   try {
-    // In production, this would call the contract's get_all_current_prices function
-    console.log('Calling get_all_current_prices with params:', params);
+    console.log('Calling get_all_current_prices with network:', params.network);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
-    return [
-      {
-        store_id: "1",
-        price: {
-          store_id: "1",
-          price_in_cents: 189000,
-          timestamp: Math.floor(Date.now() / 1000),
-          updated_by: "admin"
-        }
-      },
-      // ... other prices
-    ];
+    const result = await contract.call('get_all_current_prices');
+    console.log('Raw contract result for get_all_current_prices:', result);
+    
+    // Convert contract result to price array
+    const prices: Array<{store_id: string, price: Price}> = [];
+    if (Array.isArray(result)) {
+      for (const priceData of result) {
+        // priceData should be [store_id, Price] tuple
+        const [storeId, priceInfo] = priceData;
+        prices.push({
+          store_id: storeId.toString(),
+          price: {
+            price: priceInfo.price.toString(),
+            timestamp: Number(priceInfo.timestamp)
+          }
+        });
+      }
+    }
+    
+    return prices;
   } catch (error) {
     console.error('Error getting current prices:', error);
     throw error;
@@ -89,17 +169,19 @@ export async function getAllCurrentPrices(params: ContractCallParams): Promise<A
 
 export async function getStore(params: ContractCallParams, storeId: string): Promise<Store> {
   try {
-    // In production: await executeContractCall(params, CONTRACT_ADDRESS, "get_store", [storeId]);
-    console.log('Calling get_store with params:', params, 'storeId:', storeId);
+    console.log('Calling get_store with network:', params.network, 'storeId:', storeId);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
+    const result = await contract.call('get_store', [storeId]);
+    console.log('Raw contract result for get_store:', result);
+    
     return {
-      id: storeId,
-      name: "Store Name",
-      address: "Store Address",
-      phone: "+54 11 1234-5678",
-      hours: "Lun-Dom: 8:00-22:00",
-      uri: "https://example.com"
+      id: result.id.toString(),
+      name: byteArrayToString(result.name),
+      address: byteArrayToString(result.address),
+      phone: byteArrayToString(result.phone),
+      hours: byteArrayToString(result.hours),
+      URI: byteArrayToString(result.URI)
     };
   } catch (error) {
     console.error('Error getting store:', error);
@@ -109,15 +191,15 @@ export async function getStore(params: ContractCallParams, storeId: string): Pro
 
 export async function getCurrentPrice(params: ContractCallParams, storeId: string): Promise<Price> {
   try {
-    // In production: await executeContractCall(params, CONTRACT_ADDRESS, "get_current_price", [storeId]);
-    console.log('Calling get_current_price with params:', params, 'storeId:', storeId);
+    console.log('Calling get_current_price with network:', params.network, 'storeId:', storeId);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
+    const result = await contract.call('get_current_price', [storeId]);
+    console.log('Raw contract result for get_current_price:', result);
+    
     return {
-      store_id: storeId,
-      price_in_cents: 175000,
-      timestamp: Math.floor(Date.now() / 1000),
-      updated_by: "admin"
+      price: result.price.toString(),
+      timestamp: Number(result.timestamp)
     };
   } catch (error) {
     console.error('Error getting current price:', error);
@@ -127,18 +209,23 @@ export async function getCurrentPrice(params: ContractCallParams, storeId: strin
 
 export async function getPriceHistory(params: ContractCallParams, storeId: string): Promise<Price[]> {
   try {
-    // In production: await executeContractCall(params, CONTRACT_ADDRESS, "get_price_history", [storeId]);
-    console.log('Calling get_price_history with params:', params, 'storeId:', storeId);
+    console.log('Calling get_price_history with network:', params.network, 'storeId:', storeId);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
-    return [
-      {
-        store_id: storeId,
-        price_in_cents: 175000,
-        timestamp: Math.floor(Date.now() / 1000),
-        updated_by: "admin"
+    const result = await contract.call('get_price_history', [storeId]);
+    console.log('Raw contract result for get_price_history:', result);
+    
+    const prices: Price[] = [];
+    if (Array.isArray(result)) {
+      for (const priceData of result) {
+        prices.push({
+          price: priceData.price.toString(),
+          timestamp: Number(priceData.timestamp)
+        });
       }
-    ];
+    }
+    
+    return prices;
   } catch (error) {
     console.error('Error getting price history:', error);
     throw error;
@@ -147,11 +234,13 @@ export async function getPriceHistory(params: ContractCallParams, storeId: strin
 
 export async function getThanksCount(params: ContractCallParams, storeId: string): Promise<number> {
   try {
-    // In production: await executeContractCall(params, CONTRACT_ADDRESS, "get_thanks_count", [storeId]);
-    console.log('Calling get_thanks_count with params:', params, 'storeId:', storeId);
+    console.log('Calling get_thanks_count with network:', params.network, 'storeId:', storeId);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
-    return 2;
+    const result = await contract.call('get_thanks_count', [storeId]);
+    console.log('Raw contract result for get_thanks_count:', result);
+    
+    return Number(result);
   } catch (error) {
     console.error('Error getting thanks count:', error);
     throw error;
@@ -160,11 +249,14 @@ export async function getThanksCount(params: ContractCallParams, storeId: string
 
 export async function hasUserThanked(params: ContractCallParams, storeId: string): Promise<boolean> {
   try {
-    // In production: await executeContractCall(params, CONTRACT_ADDRESS, "has_user_thanked", [storeId, params.walletAddress]);
-    console.log('Calling has_user_thanked with params:', params, 'storeId:', storeId);
+    console.log('Calling has_user_thanked with network:', params.network, 'storeId:', storeId);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
-    return false;
+    const result = await contract.call('has_user_thanked', [storeId, params.walletAddress]);
+    console.log('Raw contract result for has_user_thanked:', result);
+    
+    // Handle boolean result from contract
+    return result === true || result === 1 || result?.toString() === '1';
   } catch (error) {
     console.error('Error checking if user thanked:', error);
     throw error;
@@ -173,11 +265,25 @@ export async function hasUserThanked(params: ContractCallParams, storeId: string
 
 export async function getReports(params: ContractCallParams, storeId: string): Promise<Report[]> {
   try {
-    // In production: await executeContractCall(params, CONTRACT_ADDRESS, "get_reports", [storeId]);
-    console.log('Calling get_reports with params:', params, 'storeId:', storeId);
+    console.log('Calling get_reports with network:', params.network, 'storeId:', storeId);
+    const contract = getContractForReading(params.network);
     
-    // Mock implementation
-    return [];
+    const result = await contract.call('get_reports', [storeId]);
+    console.log('Raw contract result for get_reports:', result);
+    
+    const reports: Report[] = [];
+    if (Array.isArray(result)) {
+      for (const reportData of result) {
+        reports.push({
+          store_id: reportData.store_id.toString(),
+          description: byteArrayToString(reportData.description),
+          submitted_at: Number(reportData.submitted_at),
+          submitted_by: reportData.submitted_by.toString()
+        });
+      }
+    }
+    
+    return reports;
   } catch (error) {
     console.error('Error getting reports:', error);
     throw error;
@@ -222,17 +328,17 @@ export async function submitReport(params: ContractCallParams, storeId: string, 
 export async function updatePrice(
   params: ContractCallParams,
   storeId: string,
-  priceInCents: number,
-  timestamp?: number
+  priceInCents: number
 ) {
   try {
-    const ts = timestamp || Math.floor(Date.now() / 1000);
+    // Convert price in cents to u256 format
+    const priceU256 = priceInCents.toString();
     
     const result = await executeContractCall(
       params,
       CONTRACT_ADDRESS,
       "update_price",
-      [storeId, priceInCents.toString(), ts.toString()]
+      [storeId, priceU256]
     );
     
     console.log('Price updated successfully:', result);
@@ -257,7 +363,7 @@ export async function addStore(
         store.address,
         store.phone,
         store.hours,
-        store.uri
+        store.URI
       ]
     );
     
@@ -267,6 +373,17 @@ export async function addStore(
     console.error('Error adding store:', error);
     throw error;
   }
+}
+
+// Helper function to convert Price to PriceDisplay for frontend
+export function priceToDisplay(price: Price, storeId: string): PriceDisplay {
+  const priceInCents = u256ToNumber(price.price);
+  return {
+    store_id: storeId,
+    price_in_cents: priceInCents,
+    timestamp: price.timestamp,
+    formatted_price: formatPrice(priceInCents)
+  };
 }
 
 // Helper function to get complete store data with prices and metadata
@@ -304,6 +421,39 @@ export async function getAllStoresWithPrices(params: ContractCallParams): Promis
     return storesWithPrices;
   } catch (error) {
     console.error('Error getting all stores with prices:', error);
+    throw error;
+  }
+}
+
+// Helper function to get stores with current prices using the optimized contract method
+export async function getAllStoresWithCurrentPrices(params: ContractCallParams): Promise<Array<{store: Store, price: PriceDisplay}>> {
+  try {
+    const [stores, prices] = await Promise.all([
+      getAllStores(params),
+      getAllCurrentPrices(params)
+    ]);
+    
+    // Create a map of store_id to price for efficient lookup
+    const priceMap = new Map<string, Price>();
+    prices.forEach(priceData => {
+      priceMap.set(priceData.store_id, priceData.price);
+    });
+    
+    // Combine stores with their prices
+    const result: Array<{store: Store, price: PriceDisplay}> = [];
+    stores.forEach(store => {
+      const price = priceMap.get(store.id);
+      if (price) {
+        result.push({
+          store,
+          price: priceToDisplay(price, store.id)
+        });
+      }
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Error getting all stores with current prices:', error);
     throw error;
   }
 }

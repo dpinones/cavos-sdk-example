@@ -7,99 +7,8 @@ import LoginForm from "../components/LoginForm";
 import AdminPanel from "../components/AdminPanel";
 import ReportModal from "../components/ReportModal";
 import { userAtom, isAuthenticatedAtom, signInAtom, signOutAtom } from "../lib/auth-atoms";
-import { getAllStoresWithPrices, giveThanks } from "../lib/contract";
-import type { ContractExecutionResult, SignInResponse, StoreWithPrice, FilterOptions } from "../lib/types";
-
-// Mock data for development - this would come from contract calls in production
-const MOCK_STORES: StoreWithPrice[] = [
-  {
-    id: "4",
-    name: "Jumbo Unicenter",
-    address: "Parana 3745, Martinez, Buenos Aires",
-    phone: "+54 11 4837-8000",
-    hours: "Lun-Dom: 8:00-22:00",
-    uri: "https://www.jumbo.com.ar/tienda/unicenter",
-    current_price: {
-      store_id: "4",
-      price_in_cents: 175000,
-      timestamp: 1708012800,
-      updated_by: "admin"
-    },
-    thanks_count: 2,
-    reports: []
-  },
-  {
-    id: "5",
-    name: "La Anonima Recoleta",
-    address: "Av. Las Heras 2100, Recoleta, CABA",
-    phone: "+54 11 4801-2300",
-    hours: "Lun-Sab: 7:30-24:00, Dom: 8:00-23:00",
-    uri: "https://www.laanonimaonline.com.ar/recoleta",
-    current_price: {
-      store_id: "5",
-      price_in_cents: 181000,
-      timestamp: 1708012800,
-      updated_by: "admin"
-    },
-    thanks_count: 0,
-    reports: []
-  },
-  {
-    id: "3",
-    name: "Coto Belgrano",
-    address: "Av. Cabildo 2602, Belgrano, CABA",
-    phone: "+54 11 4781-4500",
-    hours: "Lun-Dom: 8:30-21:30",
-    uri: "https://www.coto.com.ar/sucursales/belgrano",
-    current_price: {
-      store_id: "3",
-      price_in_cents: 184000,
-      timestamp: 1708012800,
-      updated_by: "admin"
-    },
-    thanks_count: 1,
-    reports: []
-  },
-  {
-    id: "1",
-    name: "Carrefour Villa Crespo",
-    address: "Av. Corrientes 4817, Villa Crespo, CABA",
-    phone: "+54 11 4857-3200",
-    hours: "Lun-Dom: 8:00-22:00",
-    uri: "https://www.carrefour.com.ar/tiendas/villa-crespo",
-    current_price: {
-      store_id: "1",
-      price_in_cents: 189000,
-      timestamp: 1708012800,
-      updated_by: "admin"
-    },
-    thanks_count: 0,
-    reports: []
-  },
-  {
-    id: "2",
-    name: "Disco Palermo",
-    address: "Av. Santa Fe 3253, Palermo, CABA",
-    phone: "+54 11 4831-9500",
-    hours: "Lun-Sab: 8:00-24:00, Dom: 9:00-22:00",
-    uri: "https://www.disco.com.ar/tienda/palermo",
-    current_price: {
-      store_id: "2",
-      price_in_cents: 205000,
-      timestamp: 1708012800,
-      updated_by: "admin"
-    },
-    thanks_count: 0,
-    reports: [
-      {
-        store_id: "2",
-        user: "user1",
-        description: "Precio incorrecto reportado",
-        timestamp: 1708012800
-      }
-    ]
-  }
-];
+import { getAllStoresWithPrices, giveThanks, priceToDisplay } from "../lib/contract";
+import type { ContractExecutionResult, SignInResponse, FilterOptions, PriceDisplay } from "../lib/types";
 
 export default function Home() {
   const user = useAtomValue(userAtom);
@@ -107,8 +16,8 @@ export default function Home() {
   const signIn = useSetAtom(signInAtom);
   const signOut = useSetAtom(signOutAtom);
 
-  const [stores, setStores] = useState<StoreWithPrice[]>([]);
-  const [selectedStore, setSelectedStore] = useState<StoreWithPrice | null>(null);
+  const [stores, setStores] = useState<any[]>([]);
+  const [selectedStore, setSelectedStore] = useState<any | null>(null);
   const [filter, setFilter] = useState<FilterOptions>({ sortBy: 'price' });
   const [isLoading, setIsLoading] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -123,57 +32,56 @@ export default function Home() {
   const loadStores = async () => {
     setIsLoading(true);
     try {
-      let storesData: StoreWithPrice[];
-      
-      if (user?.access_token) {
-        // Try to load from contract if user is authenticated
-        try {
-          const contractParams = {
-            walletAddress: user.wallet_address,
-            network: process.env.NEXT_PUBLIC_STARKNET_NETWORK || 'sepolia',
-            accessToken: user.access_token
-          };
-          
-          storesData = await getAllStoresWithPrices(contractParams);
-          console.log('Loaded stores from contract:', storesData);
-        } catch (contractError) {
-          console.log('Contract call failed, using mock data:', contractError);
-          storesData = MOCK_STORES;
-        }
-      } else {
-        // Use mock data if no user authentication
-        storesData = MOCK_STORES;
+      if (!user?.access_token) {
+        setMessage('Usuario no autenticado');
+        setStores([]);
+        return;
       }
 
+      const contractParams = {
+        walletAddress: user.wallet_address,
+        network: process.env.NEXT_PUBLIC_STARKNET_NETWORK || 'sepolia',
+        accessToken: user.access_token
+      };
+      
+      const storesData = await getAllStoresWithPrices(contractParams);
+      console.log('Loaded stores from contract:', storesData);
+
+      // Convert prices to display format and calculate price differences
+      const storesWithPriceDisplay = storesData.map(store => {
+        const priceDisplay = priceToDisplay(store.current_price, store.id);
+        return {
+          ...store,
+          price_display: priceDisplay
+        };
+      });
+
       // Calculate price differences
-      const cheapestPrice = Math.min(...storesData.map(s => s.current_price.price_in_cents));
-      const storesWithDifferences = storesData.map(store => ({
+      const prices = storesWithPriceDisplay.map(s => s.price_display.price_in_cents);
+      const cheapestPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      
+      const storesWithDifferences = storesWithPriceDisplay.map(store => ({
         ...store,
-        price_difference_from_cheapest: store.current_price.price_in_cents - cheapestPrice,
-        price_difference_percentage: ((store.current_price.price_in_cents - cheapestPrice) / cheapestPrice) * 100
+        price_difference_from_cheapest: store.price_display.price_in_cents - cheapestPrice,
+        price_difference_percentage: cheapestPrice > 0 
+          ? ((store.price_display.price_in_cents - cheapestPrice) / cheapestPrice) * 100 
+          : 0
       }));
       
       setStores(sortStores(storesWithDifferences, filter.sortBy));
     } catch (error) {
       console.error('Error loading stores:', error);
-      setMessage('Error al cargar las tiendas');
-      // Fallback to mock data on any error
-      const cheapestPrice = Math.min(...MOCK_STORES.map(s => s.current_price.price_in_cents));
-      const storesWithDifferences = MOCK_STORES.map(store => ({
-        ...store,
-        price_difference_from_cheapest: store.current_price.price_in_cents - cheapestPrice,
-        price_difference_percentage: ((store.current_price.price_in_cents - cheapestPrice) / cheapestPrice) * 100
-      }));
-      setStores(sortStores(storesWithDifferences, filter.sortBy));
+      setMessage('Error al cargar las tiendas desde el contrato');
+      setStores([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const sortStores = (stores: StoreWithPrice[], sortBy: 'price' | 'distance') => {
+  const sortStores = (stores: any[], sortBy: 'price' | 'distance') => {
     return [...stores].sort((a, b) => {
       if (sortBy === 'price') {
-        return a.current_price.price_in_cents - b.current_price.price_in_cents;
+        return a.price_display.price_in_cents - b.price_display.price_in_cents;
       }
       // For distance sorting, we'd need geolocation - for now just return as is
       return 0;

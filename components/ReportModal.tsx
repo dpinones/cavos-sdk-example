@@ -7,7 +7,7 @@ import { submitReport } from '../lib/contract';
 import type { StoreWithPrice } from '../lib/types';
 
 interface ReportModalProps {
-  store: StoreWithPrice;
+  store: any;
   onClose: () => void;
   onReportSubmitted: () => void;
 }
