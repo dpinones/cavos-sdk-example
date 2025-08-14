@@ -45,6 +45,7 @@ This is a Next.js 15 application demonstrating Cavos Service SDK integration for
 - `next` (15.4.6) - React framework with App Router
 - `tailwindcss` (^4) - Styling framework
 - `react` (19.1.0) & `react-dom` (19.1.0) - Latest React version
+- `starknet` (^7.6.4) - Starknet blockchain integration
 
 ### State Management Pattern
 Uses Jotai atoms for authentication state:
@@ -74,8 +75,8 @@ All API routes follow REST conventions and include:
 - **Contract Declaration**: Use `sncast declare` with Starknet RPC endpoints
 - **Contract Deployment**: Use `sncast deploy` with class hash and constructor arguments
 - **Network URLs**: 
-  - Sepolia: `https://starknet-sepolia.public.blastapi.io/rpc/v0_8`
-  - Mainnet: `https://starknet-mainnet.public.blastapi.io/rpc/v0_8`
+  - Sepolia: `https://starknet-sepolia.public.blastapi.io/rpc/v0_7`
+  - Mainnet: `https://starknet-mainnet.public.blastapi.io/rpc/v0_7`
 
 ### Dual Application Architecture
 This codebase contains two applications:
@@ -85,7 +86,7 @@ This codebase contains two applications:
 **Project Structure**:
 - `components/` - Fernet Barato UI components (LoginForm, AdminPanel, ReportModal)
 - `contracts/` - Cairo smart contracts with Scarb configuration
-- Mock data patterns for development with fallback to real contract calls
+- Real Starknet contract integration with production data
 
 ## Development Notes
 
@@ -111,9 +112,10 @@ All API routes implement consistent error handling:
 **Cairo Contract**: `contracts/src/lib.cairo` - FernetBarato contract with Cairo structs for Store, Price, and Report
 **Frontend Integration**: 
 - Contract interactions abstracted in `lib/contract.ts`
-- Falls back to mock data when contract calls fail
-- Supports both read and write operations via Cavos SDK
+- Direct Starknet integration using starknet.js for read operations
+- Cavos SDK for write operations and transactions
 - Transaction hash return with block explorer integration
+- Error handling for contract failures with detailed logging
 
 **Fernet Barato Application Features**:
 - Price comparison system with store management
@@ -174,7 +176,7 @@ Report {
 ```
 
 **Frontend Integration**:
-- Mock data completely removed
+- Real contract data integration completed
 - Real-time contract data fetching
 - Price conversion utilities (u256 ↔ display format)
 - Error handling for contract failures
@@ -186,3 +188,9 @@ Report {
 - `lib/types.ts` - Updated type definitions
 - `app/page.tsx` - Real contract data usage
 - `components/` - Updated for new data structure
+
+## Important Instructions
+- Do what has been asked; nothing more, nothing less
+- NEVER create files unless they're absolutely necessary for achieving your goal
+- ALWAYS prefer editing an existing file to creating a new one
+- NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User

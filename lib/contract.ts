@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Provider, Contract, RpcProvider, shortString } from 'starknet';
+import { Provider, Contract, RpcProvider, shortString, CallData, byteArray } from 'starknet';
 import type { Store, Price, StoreWithPrice, Report, PriceDisplay } from './types';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './contract-config';
 
@@ -126,6 +126,7 @@ function u256ToNumber(u256Value: any): number {
 function formatPrice(priceInCents: number): string {
   return `$${(priceInCents / 100).toFixed(2)}`;
 }
+
 
 // Function to execute contract calls through Cavos
 async function executeContractCall(
@@ -343,11 +344,15 @@ export async function getReports(params: ContractCallParams, storeId: string): P
 // Contract write functions
 export async function giveThanks(params: ContractCallParams, storeId: string) {
   try {
+    
+    // Use CallData.compile to properly format the parameters
+    const calldata = CallData.compile([storeId]);
+    
     const result = await executeContractCall(
       params,
       CONTRACT_ADDRESS,
       "give_thanks",
-      [storeId]
+      calldata
     );
     
     console.log('Thanks given successfully:', result);
@@ -360,11 +365,18 @@ export async function giveThanks(params: ContractCallParams, storeId: string) {
 
 export async function submitReport(params: ContractCallParams, storeId: string, description: string) {
   try {
+    
+    // Use CallData.compile with byteArrayFromString as per Starknet.js documentation
+    const calldata = CallData.compile([
+      storeId, 
+      byteArray.byteArrayFromString(description)
+    ]);
+    
     const result = await executeContractCall(
       params,
       CONTRACT_ADDRESS,
       "submit_report",
-      [storeId, description]
+      calldata
     );
     
     console.log('Report submitted successfully:', result);
@@ -381,14 +393,18 @@ export async function updatePrice(
   priceInCents: number
 ) {
   try {
-    // Convert price in cents to u256 format
+    
+    // Convert price in cents to u256 format (as string for Starknet)
     const priceU256 = priceInCents.toString();
+    
+    // Use CallData.compile to properly format the parameters
+    const calldata = CallData.compile([storeId, priceU256]);
     
     const result = await executeContractCall(
       params,
       CONTRACT_ADDRESS,
       "update_price",
-      [storeId, priceU256]
+      calldata
     );
     
     console.log('Price updated successfully:', result);
@@ -404,17 +420,22 @@ export async function addStore(
   store: Omit<Store, 'id'>
 ) {
   try {
+    
+    // Use CallData.compile with byteArrayFromString as per Starknet.js documentation
+    const calldata = CallData.compile([
+      byteArray.byteArrayFromString(store.name),
+      byteArray.byteArrayFromString(store.address),
+      byteArray.byteArrayFromString(store.phone),
+      byteArray.byteArrayFromString(store.hours),
+      byteArray.byteArrayFromString(store.URI)
+    ]);
+    
+    
     const result = await executeContractCall(
       params,
       CONTRACT_ADDRESS,
       "add_store",
-      [
-        store.name,
-        store.address,
-        store.phone,
-        store.hours,
-        store.URI
-      ]
+      calldata
     );
     
     console.log('Store added successfully:', result);
