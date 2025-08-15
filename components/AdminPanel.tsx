@@ -227,6 +227,7 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   onChange={(e) => setNewStore({ ...newStore, name: e.target.value })}
                   placeholder="Carrefour Villa Crespo"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={31}
                   required
                 />
               </div>
@@ -239,8 +240,9 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   type="text"
                   value={newStore.address}
                   onChange={(e) => setNewStore({ ...newStore, address: e.target.value })}
-                  placeholder="Av. Corrientes 4817, Villa Crespo, CABA"
+                  placeholder="Av. Corrientes 4817, Villa Crespo"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={31}
                   required
                 />
               </div>
@@ -256,6 +258,7 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   onChange={(e) => setNewStore({ ...newStore, hours: e.target.value })}
                   placeholder="Lun-Dom: 8:00-22:00"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={31}
                 />
               </div>
 
@@ -264,10 +267,12 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   Sitio Web
                 </label>
                 <input
+                  type="text"
                   value={newStore.URI}
                   onChange={(e) => setNewStore({ ...newStore, URI: e.target.value })}
                   placeholder="HB4Hymkdh6NRnHy1A"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={31}
                 />
               </div>
 
