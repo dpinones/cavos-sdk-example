@@ -133,6 +133,12 @@ export default function Home() {
     return new Date(timestamp * 1000).toLocaleDateString('es-AR');
   };
 
+  const formatTimestampRelative = (timestamp: number) => {
+    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const isOld = timestamp * 1000 < weekAgo;
+    return isOld ? "Actualizado hace > 1 semana" : "Actualizado hace < 1 semana";
+  };
+
   const isOldPrice = (timestamp: number) => {
     const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
     return timestamp * 1000 < weekAgo;
@@ -415,15 +421,7 @@ export default function Home() {
                           ⭐ MEJOR PRECIO
                         </span>
                       )}
-                      {store.reports.length > 0 && (
-                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                          ⚠️
-                        </span>
-                      )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {store.address.split(',')[0]}
-                    </p>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-green-600">
@@ -444,7 +442,7 @@ export default function Home() {
                     1.2km {/* Mock distance */}
                   </span>
                   <span className="flex items-center gap-1">
-                    {formatTimestamp(store.current_price.timestamp)}
+                    {formatTimestampRelative(store.current_price.timestamp)}
                     {isOldPrice(store.current_price.timestamp) && (
                       <span className="text-yellow-600">⚠️</span>
                     )}
