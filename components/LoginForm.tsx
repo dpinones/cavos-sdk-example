@@ -166,6 +166,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
                   appId={process.env.NEXT_PUBLIC_CAVOS_APP_ID || ""}
                   network={process.env.NEXT_PUBLIC_STARKNET_NETWORK || ""}
                   finalRedirectUri={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
+                  text="Continuar con Google"
                 />
               </div>
             </div>

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "axios": "^1.11.0",
-    "cavos-service-sdk": "^1.2.33",
+    "cavos-service-sdk": "^1.2.34",
     "jotai": "^2.13.1",
     "next": "15.4.6",
     "react": "19.1.0",

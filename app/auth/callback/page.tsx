@@ -11,7 +11,7 @@ function AuthCallbackComponent() {
   const searchParams = useSearchParams();
   const signIn = useSetAtom(signInAtom);
   const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
-  const [message, setMessage] = useState("Processing authentication...");
+  const [message, setMessage] = useState("Procesando autenticación...");
 
   useEffect(() => {
     const handleCallback = () => {
@@ -40,7 +40,7 @@ function AuthCallbackComponent() {
           signIn(signInResponse);
           
           setStatus("success");
-          setMessage("Authentication successful! Redirecting...");
+          // setMessage("Authentication successful! Redirecting...");
           setTimeout(() => router.push("/"), 1000);
         } else {
           setStatus("error");
