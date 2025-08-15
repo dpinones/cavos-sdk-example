@@ -279,10 +279,9 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                   Sitio Web
                 </label>
                 <input
-                  type="url"
                   value={newStore.URI}
                   onChange={(e) => setNewStore({ ...newStore, URI: e.target.value })}
-                  placeholder="https://www.carrefour.com.ar/tiendas/villa-crespo"
+                  placeholder="HB4Hymkdh6NRnHy1A"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

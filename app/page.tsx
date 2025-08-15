@@ -261,7 +261,17 @@ export default function Home() {
             <div className="space-y-3 text-sm">
               <div>
                 <span className="text-gray-600">📍 Dirección:</span>
-                <p className="font-medium">{selectedStore.address}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium flex-1">{selectedStore.address}</p>
+                  <a
+                    href={`https://maps.app.goo.gl/${selectedStore.URI}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+                  >
+                    Ver en el mapa
+                  </a>
+                </div>
               </div>
               <div>
                 <span className="text-gray-600">🕒 Horarios:</span>
