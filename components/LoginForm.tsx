@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import axios from "axios";
-import { SignInWithGoogle, SignInWithApple } from "cavos-service-sdk";
+import { SignInWithGoogle } from "cavos-service-sdk";
 import type { SignInResponse, ApiResponse } from "../lib/types";
 
 interface LoginFormProps {
@@ -13,11 +13,15 @@ interface LoginFormProps {
 export default function LoginForm({ onSignIn }: LoginFormProps) {
   const [isLoginForm, setIsLoginForm] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  // Check if any authentication method is loading
+  const isAnyLoading = isLoading || isGoogleLoading;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -114,7 +118,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your email"
               required
-              disabled={isLoading}
+              disabled={isAnyLoading}
             />
           </div>
 
@@ -131,13 +135,13 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your password"
               required
-              disabled={isLoading}
+              disabled={isAnyLoading}
             />
           </div>
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isAnyLoading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Loading..." : (isLoginForm ? "Sign In" : "Create Account")}
@@ -154,17 +158,16 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
             </div>
 
             <div className="space-y-3 flex flex-col items-center">
-              <SignInWithApple
-                appId={process.env.NEXT_PUBLIC_CAVOS_APP_ID || ""}
-                network={process.env.NEXT_PUBLIC_STARKNET_NETWORK || ""}
-                finalRedirectUri={`localhost:3000/auth/callback`}
-              />
-              
-              <SignInWithGoogle
-                appId={process.env.NEXT_PUBLIC_CAVOS_APP_ID || ""}
-                network={process.env.NEXT_PUBLIC_STARKNET_NETWORK || ""}
-                finalRedirectUri={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
-              />
+              <div 
+                onClick={() => !isAnyLoading && setIsGoogleLoading(true)}
+                className={`${isAnyLoading ? 'pointer-events-none opacity-50' : ''}`}
+              >
+                <SignInWithGoogle
+                  appId={process.env.NEXT_PUBLIC_CAVOS_APP_ID || ""}
+                  network={process.env.NEXT_PUBLIC_STARKNET_NETWORK || ""}
+                  finalRedirectUri={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
+                />
+              </div>
             </div>
           </>
         )}
@@ -176,7 +179,8 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
               setMessage("");
               setFormData({ email: "", password: "" });
             }}
-            className="text-blue-600 hover:text-blue-800 text-sm w-full"
+            disabled={isAnyLoading}
+            className="text-blue-600 hover:text-blue-800 text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-blue-600"
           >
             {isLoginForm ? "Need an account? Sign up" : "Already have an account? Sign in"}
           </button>
