@@ -85,9 +85,9 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
           <Image
             src="/FernetBarato.png"
             alt="FernetBarato"
-            width={215}
-            height={335}
-            className="max-w-full h-auto"
+            width={120}
+            height={187}
+            className="w-24 h-auto"
           />
         </div>
         <h2 className="text-xl font-semibold text-center mb-6">
