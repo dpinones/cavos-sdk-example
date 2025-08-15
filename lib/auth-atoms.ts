@@ -7,7 +7,31 @@ export interface UserData {
   network: string;
 }
 
-export const userAtom = atom<UserData | null>(null);
+// Helper functions for localStorage
+const getUserFromStorage = (): UserData | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('cavos-user');
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveUserToStorage = (user: UserData | null) => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (user) {
+      localStorage.setItem('cavos-user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('cavos-user');
+    }
+  } catch {
+    // Handle storage errors silently
+  }
+};
+
+export const userAtom = atom<UserData | null>(getUserFromStorage());
 
 export const isAuthenticatedAtom = atom((get) => {
   const user = get(userAtom);
@@ -22,9 +46,11 @@ export const signInAtom = atom(null, (get, set, signInResponse: SignInResponse) 
       network: signInResponse.network,
     };
     set(userAtom, userData);
+    saveUserToStorage(userData);
   }
 });
 
 export const signOutAtom = atom(null, (get, set) => {
   set(userAtom, null);
+  saveUserToStorage(null);
 });
