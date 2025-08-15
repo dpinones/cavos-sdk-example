@@ -582,6 +582,7 @@ export default function Home() {
 
           {/* Sort Filters */}
           <div className="flex gap-2">
+            Filtrar por: 
             <button
               onClick={() => setFilter({ ...filter, sortBy: 'price' })}
               className={`px-4 py-2 rounded-full text-sm font-medium ${
