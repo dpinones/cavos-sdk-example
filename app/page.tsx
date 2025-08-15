@@ -28,6 +28,8 @@ export default function Home() {
     price_display: { store_id: string; price_in_cents: number; timestamp: number; formatted_price: string };
     price_difference_from_cheapest: number;
     price_difference_percentage: number;
+    distance?: number; // Distance in kilometers
+    coordinates?: { lat: number; lng: number };
   };
 
   const [rawStores, setRawStores] = useState<StoreWithDisplayData[]>([]);
@@ -39,6 +41,82 @@ export default function Home() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLanding, setShowLanding] = useState(!isAuthenticated);
   const [message, setMessage] = useState("");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
+
+  // Function to calculate distance between two coordinates using Haversine formula
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in kilometers
+    return Math.round(distance * 10) / 10; // Round to 1 decimal place
+  }, []);
+
+  // Function to get coordinates from address using a geocoding service
+  const getCoordinatesFromAddress = useCallback(async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      // Using a free geocoding service (Nominatim from OpenStreetMap)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Argentina')}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      return null;
+    }
+  }, []);
+
+  // Function to get user's current location
+  const getUserLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationPermission('denied');
+      setMessage('La geolocalización no está soportada en este navegador');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        setLocationPermission('granted');
+        console.log('User location obtained:', { lat: latitude, lng: longitude });
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setLocationPermission('denied');
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setMessage('Permiso de ubicación denegado. Las distancias serán aproximadas.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setMessage('Ubicación no disponible. Las distancias serán aproximadas.');
+            break;
+          case error.TIMEOUT:
+            setMessage('Tiempo de espera agotado para obtener ubicación.');
+            break;
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
+  }, []);
 
   // Function to sort stores based on filter
   const sortStores = useCallback((storesToSort: StoreWithDisplayData[], sortBy: 'price' | 'distance') => {
@@ -46,7 +124,12 @@ export default function Home() {
       if (sortBy === 'price') {
         return a.price_display.price_in_cents - b.price_display.price_in_cents;
       }
-      // For distance sorting, we'd need geolocation - for now just return as is
+      // Sort by distance (closest first)
+      if (sortBy === 'distance') {
+        const distanceA = a.distance ?? 999;
+        const distanceB = b.distance ?? 999;
+        return distanceA - distanceB;
+      }
       return 0;
     });
   }, []);
@@ -91,8 +174,39 @@ export default function Home() {
           : 0
       }));
       
+      // Calculate distances if user location is available
+      let storesWithDistances = storesWithDifferences;
+      if (userLocation) {
+        console.log('Calculating distances from user location:', userLocation);
+        storesWithDistances = await Promise.all(
+          storesWithDifferences.map(async (store) => {
+            try {
+              // Get coordinates for the store address
+              const coordinates = await getCoordinatesFromAddress(store.address);
+              if (coordinates && userLocation) {
+                const distance = calculateDistance(
+                  userLocation.lat,
+                  userLocation.lng,
+                  coordinates.lat,
+                  coordinates.lng
+                );
+                return {
+                  ...store,
+                  coordinates,
+                  distance
+                };
+              }
+              return store;
+            } catch (error) {
+              console.error('Error calculating distance for store:', store.name, error);
+              return store;
+            }
+          })
+        );
+      }
+
       // Store raw data - filtering will be handled by the filter effect
-      setRawStores(storesWithDifferences);
+      setRawStores(storesWithDistances);
     } catch (error) {
       console.error('Error loading stores:', error);
       setMessage('Error al cargar las tiendas desde el contrato');
@@ -101,7 +215,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.access_token, user?.wallet_address]);
+  }, [user?.access_token, user?.wallet_address, userLocation, getCoordinatesFromAddress, calculateDistance]);
 
   // Handle filter changes without reloading data
   useEffect(() => {
@@ -120,6 +234,13 @@ export default function Home() {
       setShowLanding(true);
     }
   }, [isAuthenticated, user?.access_token, loadStores]);
+
+  // Request user location when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !userLocation && locationPermission !== 'denied') {
+      getUserLocation();
+    }
+  }, [isAuthenticated, userLocation, locationPermission, getUserLocation]);
 
   const formatPrice = (priceInCents: number) => {
     return `$${Math.round(priceInCents / 100).toLocaleString('es-AR', {
@@ -445,17 +566,45 @@ export default function Home() {
                 </div>
                 
                 <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    {store.thanks_count > 0 && `👍 ${store.thanks_count}`}
-                    {store.thanks_count > 0 && " • "}
-                    {formatTimestampRelative(store.current_price.timestamp)}
-                    {isOldPrice(store.current_price.timestamp) && (
-                      <span className="text-yellow-600">⚠️</span>
-                    )}
-                  </span>
-                  <span>
-                    1.2km {/* Mock distance */}
-                  </span>
+                  {filter.sortBy === 'price' ? (
+                    <>
+                      <span className="flex items-center gap-1">
+                        {store.thanks_count > 0 && `👍 ${store.thanks_count}`}
+                        {store.thanks_count > 0 && " • "}
+                        <span 
+                          title={formatTimestamp(store.current_price.timestamp)}
+                          className="cursor-help"
+                        >
+                          {formatTimestampRelative(store.current_price.timestamp)}
+                        </span>
+                        {isOldPrice(store.current_price.timestamp) && (
+                          <span className="text-yellow-600">⚠️</span>
+                        )}
+                      </span>
+                      <span>
+                        {store.distance ? `${store.distance}km` : 'Calculando...'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex items-center gap-1">
+                        {store.thanks_count > 0 && `👍 ${store.thanks_count}`}
+                        {store.thanks_count > 0 && " • "}
+                        <span 
+                          title={formatTimestamp(store.current_price.timestamp)}
+                          className="cursor-help"
+                        >
+                          {formatTimestampRelative(store.current_price.timestamp)}
+                        </span>
+                        {isOldPrice(store.current_price.timestamp) && (
+                          <span className="text-yellow-600">⚠️</span>
+                        )}
+                      </span>
+                      <span className="font-semibold">
+                        {store.distance ? `${store.distance}km` : 'Calculando...'}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
