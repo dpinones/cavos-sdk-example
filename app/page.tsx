@@ -475,7 +475,7 @@ export default function Home() {
                 </button>
                 
                 {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-44 z-50">
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg whitespace-nowrap z-50">
                     <div className="py-1">
                       <button
                         onClick={() => {
@@ -623,7 +623,7 @@ export default function Home() {
             </button>
             
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-48 z-50">
+              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg whitespace-nowrap z-50">
                 <div className="py-1">
                   <button
                     onClick={() => {
