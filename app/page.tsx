@@ -456,7 +456,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white">
           <div className="max-w-md mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <button
