@@ -557,21 +557,22 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
+        <div className="max-w-md mx-auto px-4 py-6">
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-3">
               <Image
                 src="/FernetBarato.png"
                 alt="Fernet Barato"
-                width={32}
-                height={50}
-                className="w-8 h-auto"
+                width={60}
+                height={93}
+                className="w-12 h-auto"
               />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Fernet Barato</h1>
-                {/* <p className="text-sm text-gray-600">Los mejores precios cerca tuyo</p> */}
-              </div>
             </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">Fernet Barato</h1>
+            {/* <p className="text-sm text-gray-600">Los mejores precios cerca tuyo</p> */}
+          </div>
+          
+          <div className="flex justify-end mb-4">
             <button
               onClick={handleSignOut}
               className="text-red-600 text-sm"
