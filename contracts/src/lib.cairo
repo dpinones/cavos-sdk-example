@@ -5,7 +5,6 @@ pub struct Store {
     pub id: felt252,
     pub name: ByteArray,
     pub address: ByteArray,
-    pub phone: ByteArray,
     pub hours: ByteArray,
     pub URI: ByteArray,
 }
@@ -29,7 +28,7 @@ pub struct Report {
 pub trait IFernetBarato<TContractState> {
     // Store management functions - ID is auto-incremental
     fn add_store(ref self: TContractState, name: ByteArray, address: ByteArray, 
-                phone: ByteArray, hours: ByteArray, URI: ByteArray) -> felt252;
+                hours: ByteArray, URI: ByteArray) -> felt252;
     fn get_store(self: @TContractState, store_id: felt252) -> Store;
     fn get_all_stores(self: @TContractState) -> Array<Store>;
     
@@ -123,7 +122,7 @@ pub mod FernetBarato {
         
         // Store management functions - ID is auto-incremental
         fn add_store(ref self: ContractState, name: ByteArray, address: ByteArray, 
-                    phone: ByteArray, hours: ByteArray, URI: ByteArray) -> felt252 {
+                    hours: ByteArray, URI: ByteArray) -> felt252 {
             self.assert_only_admin();
             
             // Get next available ID
@@ -134,7 +133,6 @@ pub mod FernetBarato {
                 id: store_id,
                 name: name.clone(),
                 address: address.clone(),
-                phone,
                 hours,
                 URI,
             };
