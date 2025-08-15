@@ -20,7 +20,6 @@ export default function Home() {
     id: string;
     name: string;
     address: string;
-    phone: string;
     hours: string;
     URI: string;
     current_price: { price: string; timestamp: number };

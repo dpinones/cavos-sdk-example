@@ -182,7 +182,6 @@ export async function getAllStores(params: ContractCallParams): Promise<Store[]>
           id: { toString(): string };
           name: unknown;
           address: unknown;
-          phone: unknown;
           hours: unknown;
           URI: unknown;
         };
@@ -190,7 +189,6 @@ export async function getAllStores(params: ContractCallParams): Promise<Store[]>
           id: store.id.toString(),
           name: byteArrayToString(store.name),
           address: byteArrayToString(store.address),
-          phone: byteArrayToString(store.phone),
           hours: byteArrayToString(store.hours),
           URI: byteArrayToString(store.URI)
         });
@@ -250,7 +248,6 @@ export async function getStore(params: ContractCallParams, storeId: string): Pro
       id: { toString(): string };
       name: unknown;
       address: unknown;
-      phone: unknown;
       hours: unknown;
       URI: unknown;
     };
@@ -259,7 +256,6 @@ export async function getStore(params: ContractCallParams, storeId: string): Pro
       id: store.id.toString(),
       name: byteArrayToString(store.name),
       address: byteArrayToString(store.address),
-      phone: byteArrayToString(store.phone),
       hours: byteArrayToString(store.hours),
       URI: byteArrayToString(store.URI)
     };
@@ -496,7 +492,6 @@ export async function addStore(
     const calldata = CallData.compile([
       byteArray.byteArrayFromString(store.name),
       byteArray.byteArrayFromString(store.address),
-      byteArray.byteArrayFromString(store.phone),
       byteArray.byteArrayFromString(store.hours),
       byteArray.byteArrayFromString(store.URI)
     ]);

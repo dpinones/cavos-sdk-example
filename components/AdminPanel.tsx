@@ -10,7 +10,6 @@ interface AdminPanelProps {
     id: string;
     name: string;
     address: string;
-    phone: string;
     hours: string;
     URI: string;
     price_display?: { formatted_price: string };
@@ -33,7 +32,6 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
   const [newStore, setNewStore] = useState({
     name: '',
     address: '',
-    phone: '',
     hours: '',
     URI: ''
   });
@@ -93,7 +91,6 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
       setNewStore({
         name: '',
         address: '',
-        phone: '',
         hours: '',
         URI: ''
       });
@@ -248,18 +245,6 @@ export default function AdminPanel({ stores, onClose, onUpdate }: AdminPanelProp
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  value={newStore.phone}
-                  onChange={(e) => setNewStore({ ...newStore, phone: e.target.value })}
-                  placeholder="+54 11 4857-3200"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
