@@ -43,6 +43,26 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
+  const [isMobile, setIsMobile] = useState(true);
+
+  // Function to detect if device is mobile
+  const detectMobile = useCallback(() => {
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobileScreen = window.innerWidth <= 768;
+    return isMobileDevice || isMobileScreen;
+  }, []);
+
+  // Check if device is mobile on mount
+  useEffect(() => {
+    setIsMobile(detectMobile());
+    
+    const handleResize = () => {
+      setIsMobile(detectMobile());
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [detectMobile]);
 
   // Function to calculate distance between two coordinates using Haversine formula
   const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -312,6 +332,39 @@ export default function Home() {
     setShowLanding(true);
     setMessage("");
   };
+
+  // Show desktop message if not mobile
+  if (!isMobile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">🍷 Fernet Barato</h1>
+            <div className="text-6xl mb-4">📱</div>
+          </div>
+          
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Aplicación solo para móviles
+          </h2>
+          
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            Esta aplicación está diseñada exclusivamente para dispositivos móviles. 
+            Para una mejor experiencia, accede desde tu teléfono o tablet.
+          </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-700">
+              💡 <strong>Tip:</strong> Escanea el código QR desde tu móvil o envíate el enlace por WhatsApp
+            </p>
+          </div>
+          
+          <div className="text-sm text-gray-500">
+            <p>¿Necesitas ayuda? Contacta con nuestro equipo</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show landing page only if not authenticated and landing is active
   if (showLanding && !isAuthenticated) {
