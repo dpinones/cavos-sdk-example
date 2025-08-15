@@ -611,9 +611,10 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-md mx-auto px-4 py-6">
+        <div className="max-w-md mx-auto px-4 py-8 relative">
           
-          <div className="flex justify-end mb-4 relative user-menu-container">
+          {/* 3-dots menu - positioned absolute in top right */}
+          <div className="absolute top-4 right-4 user-menu-container">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -638,18 +639,19 @@ export default function Home() {
             )}
           </div>
 
+          {/* Main header content - centered */}
           <div className="text-center mb-6">
-            <div className="flex justify-center mb-3">
+            <div className="flex justify-center mb-4">
               <Image
                 src="/FernetBarato.png"
                 alt="Fernet Barato"
-                width={60}
-                height={93}
-                className="w-12 h-auto"
+                width={100}
+                height={156}
+                className="w-20 h-auto"
               />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Fernet Barato</h1>
-            {/* <p className="text-sm text-gray-600">Los mejores precios cerca tuyo</p> */}
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Fernet Barato</h1>
+            <p className="text-base text-gray-600">Los mejores precios cerca tuyo</p>
           </div>
 
           {/* Sort Filters */}
