@@ -31,6 +31,7 @@ export default function Home() {
     price_difference_percentage: number;
   };
 
+  const [rawStores, setRawStores] = useState<StoreWithDisplayData[]>([]);
   const [stores, setStores] = useState<StoreWithDisplayData[]>([]);
   const [selectedStore, setSelectedStore] = useState<StoreWithDisplayData | null>(null);
   const [filter, setFilter] = useState<FilterOptions>({ sortBy: 'price' });
@@ -40,11 +41,23 @@ export default function Home() {
   const [showLanding, setShowLanding] = useState(!isAuthenticated);
   const [message, setMessage] = useState("");
 
+  // Function to sort stores based on filter
+  const sortStores = useCallback((storesToSort: StoreWithDisplayData[], sortBy: 'price' | 'distance') => {
+    return [...storesToSort].sort((a, b) => {
+      if (sortBy === 'price') {
+        return a.price_display.price_in_cents - b.price_display.price_in_cents;
+      }
+      // For distance sorting, we'd need geolocation - for now just return as is
+      return 0;
+    });
+  }, []);
+
   const loadStores = useCallback(async () => {
     setIsLoading(true);
     try {
       if (!user?.access_token) {
         setMessage('Usuario no autenticado');
+        setRawStores([]);
         setStores([]);
         return;
       }
@@ -79,24 +92,25 @@ export default function Home() {
           : 0
       }));
       
-      // Sort stores by price (cheapest first)
-      const sortedStores = [...storesWithDifferences].sort((a, b) => {
-        if (filter.sortBy === 'price') {
-          return a.price_display.price_in_cents - b.price_display.price_in_cents;
-        }
-        // For distance sorting, we'd need geolocation - for now just return as is
-        return 0;
-      });
-      
-      setStores(sortedStores);
+      // Store raw data - filtering will be handled by the filter effect
+      setRawStores(storesWithDifferences);
     } catch (error) {
       console.error('Error loading stores:', error);
       setMessage('Error al cargar las tiendas desde el contrato');
+      setRawStores([]);
       setStores([]);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.access_token, user?.wallet_address, filter.sortBy]);
+  }, [user?.access_token, user?.wallet_address]);
+
+  // Handle filter changes without reloading data
+  useEffect(() => {
+    if (rawStores.length > 0) {
+      const sortedStores = sortStores(rawStores, filter.sortBy);
+      setStores(sortedStores);
+    }
+  }, [filter.sortBy, rawStores, sortStores]);
 
   // Handle authentication state changes
   useEffect(() => {

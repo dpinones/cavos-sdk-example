@@ -25,11 +25,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
           <div className="space-y-4 mb-8">
             <div className="flex items-center justify-center gap-3 text-gray-700">
               <span className="text-2xl">📍</span>
-              <span className="text-sm font-medium">Encuentra tiendas cerca tuyo</span>
+              <span className="text-sm font-medium">Encuentra tiendas cercanas</span>
             </div>
             <div className="flex items-center justify-center gap-3 text-gray-700">
               <span className="text-2xl">💰</span>
-              <span className="text-sm font-medium">Compara precios en tiempo real</span>
+              <span className="text-sm font-medium">Compara precios</span>
             </div>
             <div className="flex items-center justify-center gap-3 text-gray-700">
               <span className="text-2xl">⭐</span>
