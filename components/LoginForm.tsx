@@ -59,7 +59,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
         });
 
         if (response.data.success) {
-          setMessage("Account created successfully! Please sign in.");
+          setMessage("Cuenta creada correctamente! Por favor, inicia sesión.");
           setIsLoginForm(true);
           setFormData({ email: "", password: "" });
         }
@@ -70,7 +70,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
         errorMessage =
           error.response?.data?.message ||
           error.response?.data?.details ||
-          (isLoginForm ? "Login failed" : "Registration failed");
+          (isLoginForm ? "Inicio de sesión fallido" : "Registro fallido");
       }
       setMessage(errorMessage);
     } finally {
@@ -91,7 +91,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
           />
         </div>
         <h2 className="text-xl font-semibold text-center mb-6">
-          {isLoginForm ? "Sign In" : "Create Account"}
+          {isLoginForm ? "Iniciar sesión" : "Crear cuenta"}
         </h2>
 
         {message && (
@@ -116,7 +116,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
               value={formData.email}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your email"
+              placeholder="Ingresa tu email"
               required
               disabled={isAnyLoading}
             />
@@ -124,7 +124,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              Contraseña
             </label>
             <input
               type="password"
@@ -133,7 +133,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
               value={formData.password}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your password"
+              placeholder="Ingresa tu contraseña"
               required
               disabled={isAnyLoading}
             />
@@ -144,7 +144,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
             disabled={isAnyLoading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Loading..." : (isLoginForm ? "Sign In" : "Create Account")}
+            {isLoading ? "Loading..." : (isLoginForm ? "Iniciar sesión" : "Crear cuenta")}
           </button>
         </form>
 
@@ -153,7 +153,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
           <>
             <div className="mt-6 mb-4 flex items-center">
               <div className="flex-1 border-t border-gray-300"></div>
-              <div className="px-3 text-sm text-gray-500">Or continue with</div>
+              <div className="px-3 text-sm text-gray-500">O continua con</div>
               <div className="flex-1 border-t border-gray-300"></div>
             </div>
 
@@ -182,7 +182,7 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
             disabled={isAnyLoading}
             className="text-blue-600 hover:text-blue-800 text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-blue-600"
           >
-            {isLoginForm ? "Need an account? Sign up" : "Already have an account? Sign in"}
+            {isLoginForm ? "¿No tienes una cuenta? Regístrate" : "¿Ya tienes una cuenta? Inicia sesión"}
           </button>
           
           <a
