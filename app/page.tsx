@@ -436,16 +436,16 @@ export default function Home() {
                 </div>
                 
                 <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span>
+                  <span className="flex items-center gap-1">
                     {store.thanks_count > 0 && `👍 ${store.thanks_count}`}
                     {store.thanks_count > 0 && " • "}
-                    1.2km {/* Mock distance */}
-                  </span>
-                  <span className="flex items-center gap-1">
                     {formatTimestampRelative(store.current_price.timestamp)}
                     {isOldPrice(store.current_price.timestamp) && (
                       <span className="text-yellow-600">⚠️</span>
                     )}
+                  </span>
+                  <span>
+                    1.2km {/* Mock distance */}
                   </span>
                 </div>
               </div>
