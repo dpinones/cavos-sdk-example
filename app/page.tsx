@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
+import Image from "next/image";
 import LandingPage from "../components/LandingPage";
 import LoginForm from "../components/LoginForm";
 import AdminPanel from "../components/AdminPanel";
@@ -339,7 +340,16 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">🍷 Fernet Barato</h1>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <Image
+                src="/FernetBarato.png"
+                alt="Fernet Barato"
+                width={40}
+                height={62}
+                className="w-10 h-auto"
+              />
+              <h1 className="text-3xl font-bold text-gray-900">Fernet Barato</h1>
+            </div>
             <div className="text-6xl mb-4">📱</div>
           </div>
           
@@ -377,7 +387,16 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">🍷 Fernet Barato</h1>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <Image
+                src="/FernetBarato.png"
+                alt="Fernet Barato"
+                width={40}
+                height={62}
+                className="w-10 h-auto"
+              />
+              <h1 className="text-3xl font-bold text-gray-900">Fernet Barato</h1>
+            </div>
             <p className="text-gray-600">Los mejores precios cerca tuyo</p>
           </div> */}
           <LoginForm onSignIn={handleSignIn} />
@@ -540,9 +559,18 @@ export default function Home() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">🍷 Fernet Barato</h1>
-              <p className="text-sm text-gray-600">Los mejores precios cerca tuyo</p>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/FernetBarato.png"
+                alt="Fernet Barato"
+                width={32}
+                height={50}
+                className="w-8 h-auto"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Fernet Barato</h1>
+                <p className="text-sm text-gray-600">Los mejores precios cerca tuyo</p>
+              </div>
             </div>
             <button
               onClick={handleSignOut}

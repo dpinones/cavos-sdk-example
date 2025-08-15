@@ -83,11 +83,11 @@ export default function LoginForm({ onSignIn }: LoginFormProps) {
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <div className="flex justify-center mb-6">
           <Image
-            src="/CavosLogo.png"
-            alt="Cavos Logo"
-            width={48}
-            height={48}
-            className="w-12 h-12"
+            src="/FernetBarato.png"
+            alt="FernetBarato"
+            width={215}
+            height={335}
+            className="max-w-full h-auto"
           />
         </div>
         <h2 className="text-xl font-semibold text-center mb-6">

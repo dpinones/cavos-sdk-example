@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface LandingPageProps {
   onGetStarted: () => void;
 }
@@ -12,7 +14,15 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         <div className="mb-8">
           {/* Main Logo/Icon */}
           <div className="mb-6">
-            <div className="text-8xl mb-4">🍷</div>
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/FernetBarato.png"
+                alt="Fernet Barato"
+                width={120}
+                height={187}
+                className="w-24 h-auto"
+              />
+            </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Fernet Barato
             </h1>
