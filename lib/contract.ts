@@ -131,10 +131,6 @@ function u256ToNumber(u256Value: unknown): number {
   }
 }
 
-// Helper function to format price for display
-function formatPrice(priceInCents: number): string {
-  return `$${(priceInCents / 100).toFixed(2)}`;
-}
 
 
 // Function to execute contract calls through Cavos
@@ -512,17 +508,26 @@ export async function addStore(
   }
 }
 
+// Helper function to format price without decimals and with thousands separators
+function formatPriceForDisplay(priceInCents: number): string {
+  return `$${Math.round(priceInCents / 100).toLocaleString('es-AR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })}`;
+}
+
 // Helper function to convert Price to PriceDisplay for frontend
 export function priceToDisplay(price: Price, storeId: string): PriceDisplay {
   console.log('priceToDisplay input:', { price, storeId });
   const priceInCents = u256ToNumber(price.price);
-  console.log('priceToDisplay converted:', { priceInCents, formatted: formatPrice(priceInCents) });
+  const formattedPrice = formatPriceForDisplay(priceInCents);
+  console.log('priceToDisplay converted:', { priceInCents, formatted: formattedPrice });
   
   return {
     store_id: storeId,
     price_in_cents: priceInCents,
     timestamp: price.timestamp,
-    formatted_price: formatPrice(priceInCents)
+    formatted_price: formattedPrice
   };
 }
 

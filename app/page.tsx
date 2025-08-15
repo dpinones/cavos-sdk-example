@@ -122,7 +122,10 @@ export default function Home() {
   }, [isAuthenticated, user?.access_token, loadStores]);
 
   const formatPrice = (priceInCents: number) => {
-    return `$${Math.round(priceInCents / 100).toLocaleString('es-AR')}`;
+    return `$${Math.round(priceInCents / 100).toLocaleString('es-AR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })}`;
   };
 
   const formatTimestamp = (timestamp: number) => {
