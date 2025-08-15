@@ -378,6 +378,23 @@ export async function getReports(params: ContractCallParams, storeId: string): P
   }
 }
 
+export async function isAdmin(params: ContractCallParams): Promise<boolean> {
+  try {
+    console.log('Calling is_admin with network:', params.network, 'walletAddress:', params.walletAddress);
+    const contract = getContractForReading(params.network);
+    
+    const result = await contract.call('is_admin', [params.walletAddress]);
+    console.log('Raw contract result for is_admin:', result);
+    
+    // Handle boolean result from contract
+    const boolResult = result as boolean | number | { toString(): string };
+    return boolResult === true || boolResult === 1 || String(boolResult) === '1';
+  } catch (error) {
+    console.error('Error checking if user is admin:', error);
+    return false; // Default to false if there's an error
+  }
+}
+
 // Contract write functions
 export async function giveThanks(params: ContractCallParams, storeId: string) {
   try {

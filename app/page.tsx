@@ -8,7 +8,7 @@ import LoginForm from "../components/LoginForm";
 import AdminPanel from "../components/AdminPanel";
 import ReportModal from "../components/ReportModal";
 import { userAtom, isAuthenticatedAtom, signInAtom, signOutAtom } from "../lib/auth-atoms";
-import { getAllStoresWithPrices, giveThanks, priceToDisplay } from "../lib/contract";
+import { getAllStoresWithPrices, giveThanks, priceToDisplay, isAdmin } from "../lib/contract";
 import type { SignInResponse, FilterOptions } from "../lib/types";
 
 export default function Home() {
@@ -45,6 +45,7 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
   const [isMobile, setIsMobile] = useState(true);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   // Function to detect if device is mobile
   const detectMobile = useCallback(() => {
@@ -155,6 +156,28 @@ export default function Home() {
     });
   }, []);
 
+  const checkAdminStatus = useCallback(async () => {
+    if (!user?.access_token) {
+      setIsUserAdmin(false);
+      return;
+    }
+
+    try {
+      const contractParams = {
+        walletAddress: user.wallet_address,
+        network: process.env.NEXT_PUBLIC_STARKNET_NETWORK || 'sepolia',
+        accessToken: user.access_token
+      };
+      
+      const adminStatus = await isAdmin(contractParams);
+      console.log('Admin status for user:', user.wallet_address, adminStatus);
+      setIsUserAdmin(adminStatus);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsUserAdmin(false);
+    }
+  }, [user?.access_token, user?.wallet_address]);
+
   const loadStores = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -250,11 +273,13 @@ export default function Home() {
   useEffect(() => {
     if (isAuthenticated && user?.access_token) {
       setShowLanding(false);
+      checkAdminStatus();
       loadStores();
     } else {
       setShowLanding(true);
+      setIsUserAdmin(false);
     }
-  }, [isAuthenticated, user?.access_token, loadStores]);
+  }, [isAuthenticated, user?.access_token, checkAdminStatus, loadStores]);
 
   // Request user location when authenticated
   useEffect(() => {
@@ -332,6 +357,7 @@ export default function Home() {
     setShowAdminPanel(false);
     setShowLanding(true);
     setMessage("");
+    setIsUserAdmin(false);
   };
 
   // Show desktop message if not mobile
@@ -695,8 +721,8 @@ export default function Home() {
         )}
       </div>
 
-      {/* Admin Panel Toggle */}
-      {user && (
+      {/* Admin Panel Toggle - Only show for admins */}
+      {user && isUserAdmin && (
         <div className="fixed bottom-4 right-4">
           <button
             onClick={() => setShowAdminPanel(!showAdminPanel)}
