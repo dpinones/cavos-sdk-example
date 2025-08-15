@@ -46,6 +46,7 @@ export default function Home() {
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
   const [isMobile, setIsMobile] = useState(true);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Function to detect if device is mobile
   const detectMobile = useCallback(() => {
@@ -288,6 +289,23 @@ export default function Home() {
     }
   }, [isAuthenticated, userLocation, locationPermission, getUserLocation]);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showUserMenu) {
+        const target = event.target as Element;
+        if (!target.closest('.user-menu-container')) {
+          setShowUserMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   const formatPrice = (priceInCents: number) => {
     return `$${Math.round(priceInCents / 100).toLocaleString('es-AR', {
       minimumFractionDigits: 0,
@@ -358,6 +376,7 @@ export default function Home() {
     setShowLanding(true);
     setMessage("");
     setIsUserAdmin(false);
+    setShowUserMenu(false);
   };
 
   // Show desktop message if not mobile
@@ -387,16 +406,6 @@ export default function Home() {
             Esta aplicación está diseñada exclusivamente para dispositivos móviles. 
             Para una mejor experiencia, accede desde tu teléfono o tablet.
           </p>
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-700">
-              💡 <strong>Tip:</strong> Escanea el código QR desde tu móvil o envíate el enlace por WhatsApp
-            </p>
-          </div>
-          
-          <div className="text-sm text-gray-500">
-            <p>¿Necesitas ayuda? Contacta con nuestro equipo</p>
-          </div>
         </div>
       </div>
     );
@@ -457,12 +466,31 @@ export default function Home() {
                 ← Volver
               </button>
               <h1 className="text-lg font-semibold">Detalles de Tienda</h1>
-              <button
-                onClick={handleSignOut}
-                className="text-red-600 text-sm"
-              >
-                Salir
-              </button>
+              <div className="relative user-menu-container">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <span className="text-gray-600 text-lg">⋮</span>
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-44 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          handleSignOut();
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <span>🚪</span>
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -584,6 +612,32 @@ export default function Home() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-md mx-auto px-4 py-6">
+          
+          <div className="flex justify-end mb-4 relative user-menu-container">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-gray-600 text-lg">⋮</span>
+            </button>
+            
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-48 z-50">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="text-center mb-6">
             <div className="flex justify-center mb-3">
               <Image
@@ -596,15 +650,6 @@ export default function Home() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-1">Fernet Barato</h1>
             {/* <p className="text-sm text-gray-600">Los mejores precios cerca tuyo</p> */}
-          </div>
-          
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={handleSignOut}
-              className="text-red-600 text-sm"
-            >
-              Salir
-            </button>
           </div>
 
           {/* Sort Filters */}
