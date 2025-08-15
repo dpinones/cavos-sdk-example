@@ -130,7 +130,7 @@ export default function Home() {
   };
 
   const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString('es-AR');
+    return new Date(timestamp * 1000).toLocaleDateString('es-AR');
   };
 
   const isOldPrice = (timestamp: number) => {
@@ -260,12 +260,6 @@ export default function Home() {
                 <span className="text-gray-600">📍 Dirección:</span>
                 <p className="font-medium">{selectedStore.address}</p>
               </div>
-              
-              <div>
-                <span className="text-gray-600">📞 Teléfono:</span>
-                <p className="font-medium">{selectedStore.phone}</p>
-              </div>
-              
               <div>
                 <span className="text-gray-600">🕒 Horarios:</span>
                 <p className="font-medium">{selectedStore.hours}</p>
