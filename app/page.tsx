@@ -124,12 +124,15 @@ export default function Home() {
         switch (error.code) {
           case error.PERMISSION_DENIED:
             setMessage('Permiso de ubicación denegado. Las distancias serán aproximadas.');
+            setTimeout(() => setMessage(''), 3000);
             break;
           case error.POSITION_UNAVAILABLE:
             setMessage('Ubicación no disponible. Las distancias serán aproximadas.');
+            setTimeout(() => setMessage(''), 3000);
             break;
           case error.TIMEOUT:
             setMessage('Tiempo de espera agotado para obtener ubicación.');
+            setTimeout(() => setMessage(''), 3000);
             break;
         }
       },
@@ -598,7 +601,7 @@ export default function Home() {
           </div>
 
           {message && (
-            <div className="bg-green-50 text-green-700 p-3 rounded border border-green-200 text-sm">
+            <div className="bg-yellow-50 text-yellow-700 p-3 rounded border border-yellow-200 text-sm">
               {message}
             </div>
           )}
@@ -794,7 +797,7 @@ export default function Home() {
 
       {message && (
         <div className="fixed bottom-20 left-4 right-4">
-          <div className="bg-green-50 text-green-700 p-3 rounded border border-green-200 text-sm max-w-md mx-auto">
+          <div className="bg-yellow-50 text-yellow-700 p-3 rounded border border-yellow-200 text-sm max-w-md mx-auto">
             {message}
           </div>
         </div>
