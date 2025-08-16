@@ -123,16 +123,16 @@ export default function Home() {
         setLocationPermission('denied');
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setMessage('Permiso de ubicación denegado. Las distancias serán aproximadas.');
-            setTimeout(() => setMessage(''), 3000);
+            setMessage('Permiso de ubicación denegado. Las distancias no se mostrarán.');
+            setTimeout(() => setMessage(''), 5000);
             break;
           case error.POSITION_UNAVAILABLE:
-            setMessage('Ubicación no disponible. Las distancias serán aproximadas.');
-            setTimeout(() => setMessage(''), 3000);
+            setMessage('Ubicación no disponible. Las distancias no se mostrarán.');
+            setTimeout(() => setMessage(''), 5000);
             break;
           case error.TIMEOUT:
             setMessage('Tiempo de espera agotado para obtener ubicación.');
-            setTimeout(() => setMessage(''), 3000);
+            setTimeout(() => setMessage(''), 5000);
             break;
         }
       },
