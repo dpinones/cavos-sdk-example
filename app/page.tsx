@@ -125,7 +125,7 @@ export default function Home() {
           case error.PERMISSION_DENIED:
             const isIPhone = /iPhone/.test(navigator.userAgent);
             if (isIPhone) {
-              setMessage('Para activar la localización en tu navegador, abre la app Configuración en tu iPhone, ve a Privacidad y seguridad > Localización, busca tu navegador en la lista de apps y selecciona "Al usar la app".');
+              setMessage('Las distancias no se mostrarán. Para activar la localización en tu navegador, abre la app Configuración en tu iPhone, ve a Privacidad y seguridad > Localización, busca tu navegador en la lista de apps y selecciona "Al usar la app".');
               setTimeout(() => setMessage(''), 12000);
             } else {
               setMessage('Permiso de ubicación denegado. Las distancias no se mostrarán.');
